@@ -5,7 +5,7 @@ import os
 import math
 import string
 import random
-from scaffoldmaker.meshtypes.meshtype_3d_heartventricles1 import MeshType_3d_heartventricles1
+from scaffoldmaker.meshtypes.meshtype_3d_heartventriclesbase1 import MeshType_3d_heartventriclesbase1
 from opencmiss.zinc.context import Context
 from opencmiss.zinc.fieldmodule import Fieldmodule
 from opencmiss.zinc.glyph import Glyph
@@ -109,8 +109,8 @@ def mergeOptions(options1, options2):
 def meshGeneration(region, options):
 	fieldmodule = region.getFieldmodule()
 	fieldmodule.beginChange()
-	myOptions = mergeOptions(MeshType_3d_heartventricles1.getDefaultOptions(), options)
-	MeshType_3d_heartventricles1.generateMesh(region, myOptions)
+	myOptions = mergeOptions(MeshType_3d_heartventriclesbase1.getDefaultOptions(), options)
+	MeshType_3d_heartventriclesbase1.generateMesh(region, myOptions)
 	fieldmodule.defineAllFaces()
 	fieldmodule.endChange()
 	

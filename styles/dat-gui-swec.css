@@ -128,8 +128,8 @@
        border-radius: 2px;
        box-shadow: inset 1px 0 9px 0 white;
        color: black;
-       height: 27px;
-       line-height: 27px;
+       height: 18px;
+       line-height: 18px;
        text-align: center;
        text-shadow: 1px 0 0 white
 } 
@@ -137,4 +137,10 @@
        outline-color: lightblue;
        outline-style: solid;
        outline-width: 1.5px
+}
+.dg li:not(.folder) {
+    cursor: auto;
+    height: 22px;
+    line-height: 22px;
+    padding: 0 4px 0 5px;
 }

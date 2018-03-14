@@ -54,21 +54,29 @@
 			var gui = undefined;
 			var guiControls = new function() {
 				this['Number of elements up'] = 4;
-	            this['Number of elements around'] = 12;
+	            this['Number of elements around'] = 11;
 	            this['Number of elements across septum'] = 5;
 	            this['Number of elements below septum'] = 2;
 	            this['Number of elements through LV wall'] = 1;
 	            this['LV wall thickness'] = 0.15;
 	            this['LV wall thickness ratio apex'] = 0.5;
-	            this['LV wall thickness ratio base'] = 0.75;
+	            this['LV wall thickness ratio base'] = 0.8;
 	            this['LV base flatten ratio'] = 0.75;
-	            this['LV base flatten angle degrees'] = 0.0;
+	            this['LV base flatten angle degrees'] = 25.0;
 	            this['RV free wall thickness'] = 0.05;
-	            this['RV width'] = 0.15;
-	            this['Length ratio'] = 2.0;
-	            this['Element length ratio equator/apex'] = 1.0;
-	            this['Septum arc angle degrees'] = 130.0;
+	            this['RV width'] = 0.2;
+	            this['Length ratio'] = 1.8;
+	            this['Element length ratio equator/apex'] = 0.5;
+	            this['Septum arc angle degrees'] = 125.0;
 	            this['Use cross derivatives'] = false;
+                this['Base height'] = 0.1;
+		        this['Base thickness'] = 0.05;
+		        this['LV outlet inner diameter'] = 0.3;
+		        this['LV outlet wall thickness'] = 0.02;
+		        this['RV outlet inner diameter'] = 0.3;
+		        this['RV outlet wall thickness'] = 0.02;
+		        this['Outlet element length'] = 0.1;
+		        this['Outlet rotation degrees'] = 5.0;
 			};
 						
 			var removeGeoemtry = function(scene) {
@@ -93,7 +101,6 @@
 				zincRenderer.viewAll();
 			}
 			
-						
 			var addItemToURL = function(originalString, paramName) {
 				var compatibleParamName = encodeURIComponent(paramName);
 				var parametersValue = guiControls[paramName];
@@ -136,7 +143,6 @@
 			}
 			
 			var setupDatGui = function() {
-
 				gui = new dat.GUI({autoPlace: false, width: 350});
 				gui.domElement.id = 'gui';
 				gui.close();
@@ -162,6 +168,14 @@
 				gui.add(guiControls, 'Element length ratio equator/apex').min(0.000001).step(0.01);
 				gui.add(guiControls, 'Septum arc angle degrees').min(45.0).max(270.0).step(0.1);
 				gui.add(guiControls, 'Use cross derivatives', { true: true,  false: false } );
+				gui.add(guiControls, 'Base height').min(0.0).step(0.01);
+				gui.add(guiControls, 'Base thickness').min(0.0).step(0.01);
+				gui.add(guiControls, 'LV outlet inner diameter').min(0.0).step(0.01);
+				gui.add(guiControls, 'LV outlet wall thickness').min(0.0).step(0.01);
+				gui.add(guiControls, 'RV outlet inner diameter').min(0.0).step(0.01);
+				gui.add(guiControls, 'RV outlet wall thickness').min(0.0).step(0.01);
+				gui.add(guiControls, 'Outlet element length').min(0.0).step(0.01);
+				gui.add(guiControls, 'Outlet rotation degrees').min(0.0).step(0.01);
 				gui.add(confirmButton, 'Confirm');
 			}
 			
