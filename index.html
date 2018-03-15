@@ -185,6 +185,9 @@
 				Zinc.defaultMaterialColor = 0xFFFF9C
 				zincRenderer.initialiseVisualisation();
 				scene = zincRenderer.createScene("new");
+				var zincCameraControl = scene.getZincCameraControls();
+				zincCameraControl.setMouseButtonAction("AUXILIARY", "ZOOM");
+				zincCameraControl.setMouseButtonAction("SECONDARY", "PAN");
 				zincRenderer.setCurrentScene(scene);
 				scene.loadViewURL("html/view.json");
 				zincRenderer.animate();
