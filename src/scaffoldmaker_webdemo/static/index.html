@@ -28,19 +28,19 @@
 	<body style="height:100%">
 		<div id="meshGui">
 		</div>
-		<link rel="stylesheet" href="styles/my_styles.css">
-		<script src="js/three.min.js"></script>
-		<script src="js/zinc/zinc.js"></script>
-		<script src="js/zinc/controls.js"></script>
-		<script src="js/zinc/geometry.js"></script>
-		<script src="js/zinc/glyph.js"></script>
-		<script src="js/zinc/glyphset.js"></script>
-		<script src="js/zinc/scene.js"></script>
-		<script src="js/zinc/renderer.js"></script>
-		<script src="js/zinc/utilities.js"></script>
-		<script src="js/dat.gui.js"></script>
-		<script src="js/dat.gui.removeFolder.js"></script>
-		<link rel="stylesheet" type="text/css" href="styles/dat-gui-swec.css">
+		<link rel="stylesheet" href="/static/styles/my_styles.css">
+		<script src="/static/js/three.min.js"></script>
+		<script src="/static/js/zinc/zinc.js"></script>
+		<script src="/static/js/zinc/controls.js"></script>
+		<script src="/static/js/zinc/geometry.js"></script>
+		<script src="/static/js/zinc/glyph.js"></script>
+		<script src="/static/js/zinc/glyphset.js"></script>
+		<script src="/static/js/zinc/scene.js"></script>
+		<script src="/static/js/zinc/renderer.js"></script>
+		<script src="/static/js/zinc/utilities.js"></script>
+		<script src="/static/js/dat.gui.js"></script>
+		<script src="/static/js/dat.gui.removeFolder.js"></script>
+		<link rel="stylesheet" type="text/css" href="/static/styles/dat-gui-swec.css">
 		<script>
 			var currentModel = undefined;
 		
@@ -119,7 +119,7 @@
 				for (var key in guiControls){
 					argumentString = addItemToURL(argumentString, key);
 				}
-				var finalURL = "generator?" + argumentString;
+				var finalURL = "/generator?" + argumentString;
 				console.log(finalURL);
 				zincRenderer.getCurrentScene().loadMetadataURL(finalURL);
 			}
@@ -189,7 +189,7 @@
 				zincCameraControl.setMouseButtonAction("AUXILIARY", "ZOOM");
 				zincCameraControl.setMouseButtonAction("SECONDARY", "PAN");
 				zincRenderer.setCurrentScene(scene);
-				scene.loadViewURL("html/view.json");
+				scene.loadViewURL("/static/view.json");
 				zincRenderer.animate();
 				setupDatGui();
 				confirmRemesh();
