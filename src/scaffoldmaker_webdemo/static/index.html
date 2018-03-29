@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" style="height:100%">
+	<head>
+		<title>Mesher</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+		</style>
+	</head>
+
+	<body style="height:100%">
+		<div id="meshGui">
+		</div>
+		<link rel="stylesheet" href="styles/my_styles.css">
+		<script src="js/three.min.js"></script>
+		<script src="js/zinc/zinc.js"></script>
+		<script src="js/zinc/controls.js"></script>
+		<script src="js/zinc/geometry.js"></script>
+		<script src="js/zinc/glyph.js"></script>
+		<script src="js/zinc/glyphset.js"></script>
+		<script src="js/zinc/scene.js"></script>
+		<script src="js/zinc/renderer.js"></script>
+		<script src="js/zinc/utilities.js"></script>
+		<script src="js/dat.gui.js"></script>
+		<script src="js/dat.gui.removeFolder.js"></script>
+		<link rel="stylesheet" type="text/css" href="styles/dat-gui-swec.css">
+		<script>
+			var currentModel = undefined;
+		
+			container = document.createElement( 'div' );
+			document.body.appendChild( container );
+			container.style.height = "100%"
+			var scene = undefined;
+			var zincRenderer = undefined;
+			var acrossSeptumDisplay = undefined;
+			var belowSeptumDisplay = undefined;
+			var gui = undefined;
+			var guiControls = new function() {
+				this['Number of elements up'] = 4;
+	            this['Number of elements around'] = 11;
+	            this['Number of elements across septum'] = 5;
+	            this['Number of elements below septum'] = 2;
+	            this['Number of elements through LV wall'] = 1;
+	            this['LV wall thickness'] = 0.15;
+	            this['LV wall thickness ratio apex'] = 0.5;
+	            this['LV wall thickness ratio base'] = 0.8;
+	            this['LV base flatten ratio'] = 0.75;
+	            this['LV base flatten angle degrees'] = 25.0;
+	            this['RV free wall thickness'] = 0.05;
+	            this['RV width'] = 0.2;
+	            this['Length ratio'] = 1.8;
+	            this['Element length ratio equator/apex'] = 0.5;
+	            this['Septum arc angle degrees'] = 125.0;
+	            this['Use cross derivatives'] = false;
+                this['Base height'] = 0.1;
+		        this['Base thickness'] = 0.05;
+		        this['LV outlet inner diameter'] = 0.3;
+		        this['LV outlet wall thickness'] = 0.02;
+		        this['RV outlet inner diameter'] = 0.3;
+		        this['RV outlet wall thickness'] = 0.02;
+		        this['Outlet element length'] = 0.1;
+		        this['Outlet rotation degrees'] = 5.0;
+			};
+						
+			var removeGeoemtry = function(scene) {
+				return function(zincGeometry) {
+					scene.removeZincGeometry(zincGeometry);
+				}
+			}
+
+			var removeGlyphset = function(scene) {
+				return function(zincGlyphset) {
+					scene.removeZincGlyphset(zincGlyphset);
+				}
+			}
+			
+			function resetView()
+			{
+				zincRenderer.resetView();
+			}
+			
+			function viewAll()
+			{
+				zincRenderer.viewAll();
+			}
+			
+			var addItemToURL = function(originalString, paramName) {
+				var compatibleParamName = encodeURIComponent(paramName);
+				var parametersValue = guiControls[paramName];
+				var newString = "";
+				if (originalString == "")
+					newString = compatibleParamName + "=" + parametersValue;
+				else
+				 	newString = originalString + "&" + compatibleParamName + "=" + parametersValue;
+				return newString;
+			}
+			
+			var confirmRemesh = function() {
+				var currentScene = zincRenderer.getCurrentScene();
+				currentScene.clearAll()
+				var argumentString = "";
+				for (var key in guiControls){
+					argumentString = addItemToURL(argumentString, key);
+				}
+				var finalURL = "generator?" + argumentString;
+				console.log(finalURL);
+				zincRenderer.getCurrentScene().loadMetadataURL(finalURL);
+			}
+			
+			var acrossSeptumEntered = function() {
+					return function(value) {
+						if (value > guiControls['Number of elements around'] - 2) {
+							guiControls['Number of elements across septum'] = guiControls['Number of elements around'] - 2;
+							acrossSeptumDisplay.updateDisplay();	
+						}
+					}
+			}
+			
+			var belowSeptumEntered = function() {
+					return function(value) {
+						if (value > guiControls['Number of elements up'] - 1) {
+							guiControls['Number of elements below septum'] = guiControls['Number of elements up'] - 1;
+							belowSeptumDisplay.updateDisplay();	
+						}
+					}
+			}
+			
+			var setupDatGui = function() {
+				gui = new dat.GUI({autoPlace: false, width: 350});
+				gui.domElement.id = 'gui';
+				gui.close();
+				var customContainer = document.getElementById("meshGui").append(gui.domElement);
+				var confirmButton = { 'Confirm':function(){ confirmRemesh() }};
+				var viewAllButton = { 'View All':function(){ viewAll() }};
+				var resetButton = { 'Reset':function(){ resetView() }};
+				gui.add(viewAllButton, 'View All');
+				gui.add(resetButton, 'Reset');
+				gui.add(guiControls, 'Number of elements up').min(4).step(1);
+				gui.add(guiControls, 'Number of elements around').min(4).step(1);
+				acrossSeptumDisplay = gui.add(guiControls, 'Number of elements across septum').min(2).step(1).onChange(acrossSeptumEntered());
+				belowSeptumDisplay = gui.add(guiControls, 'Number of elements below septum').min(2).step(1).onChange(belowSeptumEntered());
+				gui.add(guiControls, 'Number of elements through LV wall').min(1).step(1);
+				gui.add(guiControls, 'LV wall thickness').min(0.0).max(0.5).step(0.01);
+				gui.add(guiControls, 'LV wall thickness ratio apex').min(0.0).step(0.01);
+				gui.add(guiControls, 'LV wall thickness ratio base').min(0.0).step(0.01);
+				gui.add(guiControls, 'LV base flatten ratio').min(0.0).step(0.01);
+				gui.add(guiControls, 'LV base flatten angle degrees').step(0.01)
+				gui.add(guiControls, 'RV free wall thickness').min(0.0).step(0.01);
+				gui.add(guiControls, 'RV width').min(0.0).step(0.01);
+				gui.add(guiControls, 'Length ratio').min(0.000001).step(0.01);
+				gui.add(guiControls, 'Element length ratio equator/apex').min(0.000001).step(0.01);
+				gui.add(guiControls, 'Septum arc angle degrees').min(45.0).max(270.0).step(0.1);
+				gui.add(guiControls, 'Use cross derivatives', { true: true,  false: false } );
+				gui.add(guiControls, 'Base height').min(0.0).step(0.01);
+				gui.add(guiControls, 'Base thickness').min(0.0).step(0.01);
+				gui.add(guiControls, 'LV outlet inner diameter').min(0.0).step(0.01);
+				gui.add(guiControls, 'LV outlet wall thickness').min(0.0).step(0.01);
+				gui.add(guiControls, 'RV outlet inner diameter').min(0.0).step(0.01);
+				gui.add(guiControls, 'RV outlet wall thickness').min(0.0).step(0.01);
+				gui.add(guiControls, 'Outlet element length').min(0.0).step(0.01);
+				gui.add(guiControls, 'Outlet rotation degrees').min(0.0).step(0.01);
+				gui.add(confirmButton, 'Confirm');
+			}
+			
+			function initialise() {
+				scene = undefined;
+				zincRenderer = new Zinc.Renderer(container, window);
+				Zinc.defaultMaterialColor = 0xFFFF9C
+				zincRenderer.initialiseVisualisation();
+				scene = zincRenderer.createScene("new");
+				var zincCameraControl = scene.getZincCameraControls();
+				zincCameraControl.setMouseButtonAction("AUXILIARY", "ZOOM");
+				zincCameraControl.setMouseButtonAction("SECONDARY", "PAN");
+				zincRenderer.setCurrentScene(scene);
+				scene.loadViewURL("html/view.json");
+				zincRenderer.animate();
+				setupDatGui();
+				confirmRemesh();
+			}
+			
+			
+			initialise();
+
+		</script>
+
+	</body>
+</html>
