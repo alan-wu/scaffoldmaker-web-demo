@@ -29,6 +29,7 @@ setup(
         'setuptools>=12',
         'sqlalchemy>=0.9',
         'zinc',  # 'opencmiss.zinc',
+        'scaffoldmaker',
         'sanic',
     ],
     include_package_data=True,
