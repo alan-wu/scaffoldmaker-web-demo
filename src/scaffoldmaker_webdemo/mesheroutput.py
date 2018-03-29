@@ -64,7 +64,6 @@ def exportWebGLJson(region, location, prefix):
     Export graphics into JSON format, one json export represents one
     surface graphics.
     '''
-    directory = "../../mytesting/mesher_output/html/generated/" + location + "/"
     scene = region.getScene()
     sceneSR = scene.createStreaminformationScene()
     sceneSR.setIOFormat(sceneSR.IO_FORMAT_THREEJS)
@@ -78,30 +77,8 @@ def exportWebGLJson(region, location, prefix):
         resources.append(sceneSR.createStreamresourceMemory())
     scene.write(sceneSR)
     # Write out each resource into their own file
-    metaBuffer = ""
-    # create directory if it does not exist
-    if not os.path.exists(directory):
-        os.makedirs(directory)
 
-    for i in range(number):
-        f = None
-        file_name = None
-        if i == 0:
-            file_name = directory + prefix + '_' + 'metadata.json'
-        else:
-            file_name = directory + prefix + '_' + str(i) + '.json'
-        f = open(file_name, 'w+')
-        buffer = resources[i].getBuffer()[1]
-        if i == 0:
-            for j in range(number-1):
-                replaceName = 'html/generated/' + location + "/" + prefix + '_' + str(j+1) + '.json'
-                old_name = 'memory_resource'+ '_' + str(j+2)
-                buffer = buffer.replace(old_name, replaceName)
-            metaBuffer = buffer
-        f.write(buffer)
-        f.close()
-
-    return metaBuffer
+    return [resources[i].getBuffer()[1] for i in range(number)]
 
 
 def mergeOptions(options1, options2):
