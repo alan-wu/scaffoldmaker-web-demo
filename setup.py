@@ -34,6 +34,9 @@ setup(
     include_package_data=True,
     python_requires='>=3.5',
     entry_points={
+        'console_scripts': [
+            'scaffoldmaker_web = scaffoldmaker_webdemo.app:main',
+        ]
     },
     # test_suite="",
 )
