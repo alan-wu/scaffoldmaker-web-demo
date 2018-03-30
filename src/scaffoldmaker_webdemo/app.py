@@ -16,8 +16,8 @@ with open(join(dirname(__file__), 'static', 'index.html')) as fd:
 store = backend.Store(db_src)
 
 
-def build(options):
-    model = mesheroutput.outputModel(options)
+def build(typeName, options):
+    model = mesheroutput.outputModel(typeName, options)
     job = backend.Job()
     job.timestamp = int(time())
     for data in model:
@@ -41,16 +41,34 @@ async def output(request, resource_id):
 @app.route('/generator')
 async def generator(request):
     options = {}
+    typeName = '3d_heartventricles1'
     for k, values in request.args.items():
         v = values[0]
-        if k == 'Use cross derivatives':
+        if k == 'meshtype':
+            typeName = v
+        elif k == 'Use cross derivatives':
             options[k] = v == 'true'
         elif v.isdecimal():
             options[k] = int(v)
         elif v.replace('.', '', 1).isdecimal():
             options[k] = float(v)
-    response = build(options)
+    response = build(typeName, options)
     return json(response)
+
+
+@app.route('/getMeshTypes')
+async def getMeshTypes(request):
+    return json(mesheroutput.getMeshTypesString())
+
+
+@app.route('/getMeshTypeOptions')
+async def getMeshTypeOptions(request):
+    typeName = ''
+    for k, values in request.args.items():
+        v = values[0]
+        if k == 'type':
+            typeName = v
+    return json(mesheroutput.getMeshTypeOptions(typeName))
 
 
 @app.route('/')
