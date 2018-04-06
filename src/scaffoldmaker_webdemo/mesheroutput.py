@@ -49,7 +49,7 @@ def createCylindeLineGraphics(context, region):
 
     lineAttr = lines.getGraphicslineattributes()
     lineAttr.setShapeType(lineAttr.SHAPE_TYPE_CIRCLE_EXTRUSION)
-    lineAttr.setBaseSize([0.015, 0.015])
+    lineAttr.setBaseSize([0.007, 0.007])
     lines.setMaterial(material)
      # Let the scene render the scene.
     scene.endChange()
