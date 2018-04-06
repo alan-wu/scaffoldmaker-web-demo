@@ -52,6 +52,11 @@ async def generator(request):
             options[k] = int(v)
         elif v.replace('.', '', 1).isdecimal():
             options[k] = float(v)
+        elif v == 'false':
+            options[k] = False
+        elif v == 'true':
+            options[k] = True
+
     response = build(typeName, options)
     return json(response)
 
