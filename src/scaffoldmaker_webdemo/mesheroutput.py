@@ -112,8 +112,10 @@ def meshGeneration(typeName, region, options):
     fieldmodule.defineAllFaces()
     fieldmodule.endChange()
 
+
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
 
 def outputModel(meshtype, options):
     location = id_generator()
@@ -132,21 +134,24 @@ def outputModel(meshtype, options):
     # Export graphics into JSON format
 
     return exportWebGLJson(region, location, prefix)
-    
+
+
 def getMeshTypesString():
-	scaffoldmaker = Scaffoldmaker()
-	meshTypes = scaffoldmaker.getMeshTypes()
-	meshStrings = []
-	for type in meshTypes:
-		meshStrings.append(type.__name__.replace('MeshType_', ''))
-	return meshStrings;
-	
+    scaffoldmaker = Scaffoldmaker()
+    meshTypes = scaffoldmaker.getMeshTypes()
+    meshStrings = []
+    for type in meshTypes:
+        meshStrings.append(type.__name__.replace('MeshType_', ''))
+    return meshStrings
+
+
 def getMeshTypeOptions(typeName):
-	typeString = 'MeshType_' + typeName
-	typeClass = eval(typeString)
-	defaultOptions = typeClass.getDefaultOptions()
-	availableOptions = typeClass.getOrderedOptionNames()
-	configurationOptions={}
-	for option in availableOptions:
-		configurationOptions[option] = defaultOptions[option]
-	return configurationOptions
+    typeString = 'MeshType_' + typeName
+    typeClass = eval(typeString)
+    defaultOptions = typeClass.getDefaultOptions()
+    availableOptions = typeClass.getOrderedOptionNames()
+    configurationOptions={}
+    for option in availableOptions:
+        configurationOptions[option] = defaultOptions[option]
+
+    return configurationOptions
