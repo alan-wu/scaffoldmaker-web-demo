@@ -1,17 +1,12 @@
 """
 Generates 3-D Left and Right ventricles mesh starting from modified sphere shell mesh.
 """
+
 import os
+import json
 import math
-import string
-import random
 from scaffoldmaker.scaffoldmaker import Scaffoldmaker
 from opencmiss.zinc.context import Context
-from opencmiss.zinc.fieldmodule import Fieldmodule
-from opencmiss.zinc.glyph import Glyph
-from opencmiss.zinc.graphics import Graphics
-from opencmiss.zinc.material import Material
-import json
 
 meshes = {
     meshtype.__name__[len('MeshType_'):]: meshtype
@@ -64,7 +59,7 @@ def createSurfaceGraphics(context, region):
     scene.endChange()
 
 
-def exportWebGLJson(region, prefix):
+def exportWebGLJson(region):
     '''
     Export graphics into JSON format, one json export represents one
     surface graphics.
@@ -92,40 +87,44 @@ def mergeOptions(options1, options2):
     return options1
 
 
-def meshGeneration(meshtype, region, options):
-    typeClass = meshes.get(meshtype)
+def meshGeneration(meshtype_cls, region, options):
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
-    myOptions = mergeOptions(typeClass.getDefaultOptions(), options)
-    typeClass.generateMesh(region, myOptions)
+    myOptions = mergeOptions(meshtype_cls.getDefaultOptions(), options)
+    meshtype_cls.generateMesh(region, myOptions)
     fieldmodule.defineAllFaces()
     fieldmodule.endChange()
 
 
 def outputModel(meshtype, options):
-    prefix = "temp"
+    """
+    Provided meshtype must exist as a key in the meshes dict in this
+    module.
+    """
+
     # Initialise a sceneviewer for viewing
+    meshtype_cls = meshes.get(meshtype)
     context = Context('output')
     logger = context.getLogger()
     context.getGlyphmodule().defineStandardGlyphs()
     region = context.createRegion()
-
     #readTestRegion(region)
-    meshGeneration(meshtype, region, options)
+    meshGeneration(meshtype_cls, region, options)
     # Create surface graphics which will be viewed and exported
     createSurfaceGraphics(context, region)
     createCylindeLineGraphics(context, region)
     # Export graphics into JSON format
-
-    return exportWebGLJson(region, prefix)
+    return exportWebGLJson(region)
 
 
 def getMeshTypeOptions(meshtype):
-    typeClass = meshes.get(meshtype)
-    defaultOptions = typeClass.getDefaultOptions()
-    availableOptions = typeClass.getOrderedOptionNames()
-    configurationOptions={}
-    for option in availableOptions:
-        configurationOptions[option] = defaultOptions[option]
+    """
+    Provided meshtype must exist as a key in the meshes dict in this
+    module, otherwise return value will be None.
+    """
 
-    return configurationOptions
+    meshtype_cls = meshes.get(meshtype)
+    if not meshtype_cls:
+        return None
+    defaultOptions = meshtype_cls.getDefaultOptions()
+    return defaultOptions

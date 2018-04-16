@@ -1,3 +1,4 @@
+import logging
 from json import loads
 from time import time
 from os.path import dirname
@@ -14,6 +15,7 @@ with open(join(dirname(__file__), 'static', 'index.html')) as fd:
     index_html = fd.read()
 
 store = backend.Store(db_src)
+logger = logging.getLogger(__name__)
 
 
 def build(typeName, options):
@@ -27,7 +29,6 @@ def build(typeName, options):
     response = loads(job.resources[0].data)
     store.add(job)
     for idx, obj in enumerate(response, 1):
-        # XXX
         resource_id = job.resources[idx].id
         obj['URL'] = '/output/%d' % resource_id
     return response
@@ -57,7 +58,15 @@ async def generator(request):
         elif v == 'true':
             options[k] = True
 
-    response = build(typeName, options)
+    if typeName not in mesheroutput.meshes.keys():
+        return json({'error': 'no such mesh type'}, status=400)
+
+    try:
+        response = build(typeName, options)
+    except Exception as e:
+        logger.exception('error while generating mesh')
+        return json({'error': 'error generating mesh: ' + str(e)}, status=400)
+
     return json(response)
 
 
@@ -68,12 +77,10 @@ async def getMeshTypes(request):
 
 @app.route('/getMeshTypeOptions')
 async def getMeshTypeOptions(request):
-    typeName = ''
-    for k, values in request.args.items():
-        v = values[0]
-        if k == 'type':
-            typeName = v
-    return json(mesheroutput.getMeshTypeOptions(typeName))
+    options = mesheroutput.getMeshTypeOptions(request.args.get('type'))
+    if options is None:
+        return json({'error': 'no such mesh type'}, status=400)
+    return json(options)
 
 
 @app.route('/')
