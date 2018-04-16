@@ -78,7 +78,7 @@ def createSurfaceGraphics(context, region):
     scene.endChange()
 
 
-def exportWebGLJson(region, location, prefix):
+def exportWebGLJson(region, prefix):
     '''
     Export graphics into JSON format, one json export represents one
     surface graphics.
@@ -117,12 +117,7 @@ def meshGeneration(typeName, region, options):
     fieldmodule.endChange()
 
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
-
-
 def outputModel(meshtype, options):
-    location = id_generator()
     prefix = "temp"
     # Initialise a sceneviewer for viewing
     context = Context('output')
@@ -137,7 +132,7 @@ def outputModel(meshtype, options):
     createCylindeLineGraphics(context, region)
     # Export graphics into JSON format
 
-    return exportWebGLJson(region, location, prefix)
+    return exportWebGLJson(region, prefix)
 
 
 def getMeshTypesString():
