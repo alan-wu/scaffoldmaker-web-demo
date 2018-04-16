@@ -8,7 +8,9 @@
  * @author Alan Wu
  * @return {Zinc.Glyphset}
  */
-Zinc.Glyphset = function()  {
+var THREE = require('three');
+
+exports.Glyphset = function()  {
 	var glyphList = [];
 	var axis1s = undefined;
 	var axis2s = undefined;

@@ -7,7 +7,10 @@
  * @author Alan Wu
  * @return {Zinc.Geometry}
  */
-Zinc.Geometry = function () {
+
+var THREE = require('three');
+
+exports.Geometry = function () {
 	// THREE.Geometry or THREE.BufferGeometry
 	this.geometry = undefined;
 	this.mixer = undefined;

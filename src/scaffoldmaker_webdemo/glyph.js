@@ -10,7 +10,9 @@
  * @author Alan Wu
  * @return {Zinc.Glyph}
  */
-Zinc.Glyph = function(geometry, materialIn, idIn)  {
+var THREE = require('three');
+
+exports.Glyph = function(geometry, materialIn, idIn)  {
 	var material = materialIn.clone();
 	material.vertexColors = THREE.FaceColors;
 	var mesh = new THREE.Mesh( geometry, material );

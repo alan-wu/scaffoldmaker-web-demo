@@ -12,6 +12,16 @@ Programming Language :: Python :: 3
 Programming Language :: Python :: 3.6
 """.strip().splitlines()
 
+package_json = {
+    "dependencies": {
+        "three": "~0.84.0",
+        "dat.gui": "~0.7.1",
+    },
+    "devDependencies": {
+        "eslint": "~3.15.0",
+    }
+}
+
 setup(
     name='scaffoldmaker_webdemo',
     version=version,
@@ -32,12 +42,23 @@ setup(
         'scaffoldmaker',
         'sanic',
     ],
+    extras_calmjs={
+        'node_modules': {
+            'three': 'three/build/three.js',
+            'dat.gui': 'dat.gui/build/dat.gui.js',
+        },
+    },
+    package_json=package_json,
+    calmjs_module_registry=['calmjs.module'],
     include_package_data=True,
     python_requires='>=3.5',
     entry_points={
         'console_scripts': [
             'scaffoldmaker_web = scaffoldmaker_webdemo.app:main',
-        ]
+        ],
+        'calmjs.module': [
+            'scaffoldmaker_webdemo = scaffoldmaker_webdemo',
+        ],
     },
     # test_suite="",
 )

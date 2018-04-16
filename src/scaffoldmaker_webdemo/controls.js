@@ -1,3 +1,5 @@
+var THREE = require('three');
+
 ZincViewport = function () {
 	this.nearPlane = 0.1;
 	this.farPlane = 2000.0;
@@ -1164,4 +1166,8 @@ ModifiedDeviceOrientationControls = function ( object ) {
 
 };
 
-
+exports.ZincViewport = ZincViewport;
+exports.ZincCameraControls = ZincCameraControls;
+exports.ZincSmoothCameraTransition = ZincSmoothCameraTransition;
+exports.ZincRayCaster = ZincRayCaster;
+exports.ZincCameraAutoTumble = ZincCameraAutoTumble;

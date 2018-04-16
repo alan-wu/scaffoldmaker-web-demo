@@ -10,7 +10,10 @@
  * @author Alan Wu
  * @return {Zinc.Renderer}
  */
-Zinc.Renderer = function (containerIn, window) {
+var THREE = require('three');
+var Zinc = require('scaffoldmaker_webdemo/zinc').Zinc;
+
+exports.Renderer = function (containerIn, window) {
 
 	var animation = 0;
 	

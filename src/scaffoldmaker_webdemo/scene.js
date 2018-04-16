@@ -9,7 +9,11 @@
  * @author Alan Wu
  * @return {Zinc.Scene}
  */
-Zinc.Scene = function ( containerIn, rendererIn) {
+
+var THREE = require('three');
+var Zinc = require('scaffoldmaker_webdemo/zinc').Zinc;
+
+exports.Scene = function ( containerIn, rendererIn) {
 	var container = containerIn;
 	var zincGeometries = [];
 	var zincGlyphsets = [];
