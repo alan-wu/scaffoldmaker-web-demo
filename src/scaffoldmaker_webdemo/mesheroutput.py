@@ -28,6 +28,10 @@ from opencmiss.zinc.graphics import Graphics
 from opencmiss.zinc.material import Material
 import json
 
+meshes = {
+    k: v for k, v in globals().items() if k.startswith('MeshType_')
+}
+
 
 def createCylindeLineGraphics(context, region):
     '''create cylinders which outline the shapes of the heart'''
@@ -104,7 +108,7 @@ def mergeOptions(options1, options2):
 
 def meshGeneration(typeName, region, options):
     typeString = 'MeshType_' + typeName
-    typeClass = eval(typeString)
+    typeClass = meshes.get(typeString)
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
     myOptions = mergeOptions(typeClass.getDefaultOptions(), options)
@@ -147,7 +151,7 @@ def getMeshTypesString():
 
 def getMeshTypeOptions(typeName):
     typeString = 'MeshType_' + typeName
-    typeClass = eval(typeString)
+    typeClass = meshes.get(typeString)
     defaultOptions = typeClass.getDefaultOptions()
     availableOptions = typeClass.getOrderedOptionNames()
     configurationOptions={}
