@@ -81,16 +81,24 @@ def exportWebGLJson(region):
     return [resources[i].getBuffer()[1] for i in range(number)]
 
 
-def mergeOptions(options1, options2):
-    for item in options2:
-        options1[item] = options2[item]
-    return options1
+def finalizeOptions(meshtype_cls, provided_options):
+    options = {}
+    default_options = meshtype_cls.getDefaultOptions()
+    for key, default_value in default_options.items():
+        provided_value = provided_options.get(key)
+        if type(default_value) != type(provided_value):
+            # TODO figure out how to propagate type mistmatch issue to
+            # response.
+            options[key] = default_value
+        else:
+            options[key] = provided_value
+    return options
 
 
 def meshGeneration(meshtype_cls, region, options):
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
-    myOptions = mergeOptions(meshtype_cls.getDefaultOptions(), options)
+    myOptions = finalizeOptions(meshtype_cls, options)
     meshtype_cls.generateMesh(region, myOptions)
     fieldmodule.defineAllFaces()
     fieldmodule.endChange()
