@@ -6,21 +6,6 @@ import math
 import string
 import random
 from scaffoldmaker.scaffoldmaker import Scaffoldmaker
-from scaffoldmaker.meshtypes.meshtype_2d_plate1 import MeshType_2d_plate1
-from scaffoldmaker.meshtypes.meshtype_2d_plate1 import MeshType_2d_plate1
-from scaffoldmaker.meshtypes.meshtype_2d_platehole1 import MeshType_2d_platehole1
-from scaffoldmaker.meshtypes.meshtype_2d_sphere1 import MeshType_2d_sphere1
-from scaffoldmaker.meshtypes.meshtype_2d_tube1 import MeshType_2d_tube1
-from scaffoldmaker.meshtypes.meshtype_3d_box1 import MeshType_3d_box1
-from scaffoldmaker.meshtypes.meshtype_3d_boxhole1 import MeshType_3d_boxhole1
-from scaffoldmaker.meshtypes.meshtype_3d_heartatria1 import MeshType_3d_heartatria1
-from scaffoldmaker.meshtypes.meshtype_3d_heartventricles1 import MeshType_3d_heartventricles1
-from scaffoldmaker.meshtypes.meshtype_3d_heartventricles2 import MeshType_3d_heartventricles2
-from scaffoldmaker.meshtypes.meshtype_3d_heartventriclesbase1 import MeshType_3d_heartventriclesbase1
-from scaffoldmaker.meshtypes.meshtype_3d_sphereshell1 import MeshType_3d_sphereshell1
-from scaffoldmaker.meshtypes.meshtype_3d_sphereshellseptum1 import MeshType_3d_sphereshellseptum1
-from scaffoldmaker.meshtypes.meshtype_3d_tube1 import MeshType_3d_tube1
-from scaffoldmaker.meshtypes.meshtype_3d_tubeseptum1 import MeshType_3d_tubeseptum1
 from opencmiss.zinc.context import Context
 from opencmiss.zinc.fieldmodule import Fieldmodule
 from opencmiss.zinc.glyph import Glyph
@@ -29,7 +14,8 @@ from opencmiss.zinc.material import Material
 import json
 
 meshes = {
-    k: v for k, v in globals().items() if k.startswith('MeshType_')
+    meshtype.__name__[len('MeshType_'):]: meshtype
+    for meshtype in Scaffoldmaker().getMeshTypes()
 }
 
 
@@ -106,9 +92,8 @@ def mergeOptions(options1, options2):
     return options1
 
 
-def meshGeneration(typeName, region, options):
-    typeString = 'MeshType_' + typeName
-    typeClass = meshes.get(typeString)
+def meshGeneration(meshtype, region, options):
+    typeClass = meshes.get(meshtype)
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
     myOptions = mergeOptions(typeClass.getDefaultOptions(), options)
@@ -135,18 +120,8 @@ def outputModel(meshtype, options):
     return exportWebGLJson(region, prefix)
 
 
-def getMeshTypesString():
-    scaffoldmaker = Scaffoldmaker()
-    meshTypes = scaffoldmaker.getMeshTypes()
-    meshStrings = []
-    for type in meshTypes:
-        meshStrings.append(type.__name__.replace('MeshType_', ''))
-    return meshStrings
-
-
-def getMeshTypeOptions(typeName):
-    typeString = 'MeshType_' + typeName
-    typeClass = meshes.get(typeString)
+def getMeshTypeOptions(meshtype):
+    typeClass = meshes.get(meshtype)
     defaultOptions = typeClass.getDefaultOptions()
     availableOptions = typeClass.getOrderedOptionNames()
     configurationOptions={}

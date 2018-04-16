@@ -63,7 +63,7 @@ async def generator(request):
 
 @app.route('/getMeshTypes')
 async def getMeshTypes(request):
-    return json(mesheroutput.getMeshTypesString())
+    return json(sorted(mesheroutput.meshes.keys()))
 
 
 @app.route('/getMeshTypeOptions')
