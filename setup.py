@@ -38,7 +38,7 @@ setup(
     install_requires=[
         'setuptools>=12',
         'sqlalchemy>=0.9',
-        'zinc',  # 'opencmiss.zinc',
+        # 'opencmiss.zinc',
         'scaffoldmaker',
         'sanic',
     ],
@@ -52,12 +52,16 @@ setup(
     calmjs_module_registry=['calmjs.module'],
     include_package_data=True,
     python_requires='>=3.5',
+    build_calmjs_artifacts=True,
     entry_points={
         'console_scripts': [
             'scaffoldmaker_web = scaffoldmaker_webdemo.app:main',
         ],
         'calmjs.module': [
             'scaffoldmaker_webdemo = scaffoldmaker_webdemo',
+        ],
+        'calmjs.artifacts': [
+            'bundle.js = calmjs.webpack.artifact:complete_webpack',
         ],
     },
     # test_suite="",
