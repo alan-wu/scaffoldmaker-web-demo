@@ -3,8 +3,9 @@ from json import loads
 from time import time
 from os.path import dirname
 from os.path import join
+from pkg_resources import get_distribution
 from sanic import Sanic
-from sanic.response import json, html
+from sanic.response import json, html, text
 from scaffoldmaker_webdemo import mesheroutput
 from scaffoldmaker_webdemo import backend
 
@@ -13,6 +14,9 @@ app = Sanic()
 app.static('/static', join(dirname(__file__), 'static'))
 with open(join(dirname(__file__), 'static', 'index.html')) as fd:
     index_html = fd.read()
+
+bundle_js = get_distribution('scaffoldmaker_webdemo').get_metadata(
+    'calmjs_artifacts/bundle.js')
 
 store = backend.Store(db_src)
 logger = logging.getLogger(__name__)
@@ -81,6 +85,11 @@ async def getMeshTypeOptions(request):
     if options is None:
         return json({'error': 'no such mesh type'}, status=400)
     return json(options)
+
+
+@app.route('/scaffoldmaker_webdemo.js')
+async def bundle(request):
+    return text(bundle_js, headers={'Content-Type': 'application/javascript'})
 
 
 @app.route('/')
