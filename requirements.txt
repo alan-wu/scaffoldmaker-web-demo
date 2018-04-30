@@ -1,2 +1,2 @@
 -e git+https://github.com/ABI-Software/scaffoldmaker.git#egg=scaffoldmaker
--e .
+-e .[webpack]

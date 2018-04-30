@@ -42,6 +42,11 @@ setup(
         'scaffoldmaker',
         'sanic',
     ],
+    extras_require={
+        'webpack': [
+            'calmjs.webpack',
+        ],
+    },
     extras_calmjs={
         'node_modules': {
             'three': 'three/build/three.js',
