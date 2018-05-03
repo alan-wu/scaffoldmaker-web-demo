@@ -3,11 +3,15 @@ This demo demonstrates the use of [scaffoldmaker](https://github.com/ABI-Softwar
 
 ## Installation
 
+This demo now runs with calmjs, to learn more about calmjs please take a look here https://github.com/calmjs/calmjs .
+
 In a virtual environment that has opencmiss.zinc available, clone this
 repository, change to that directory and run
 
 ```
 pip install -r requirements.txt
+calmjs npm --install scaffoldmaker_webdemo[webpack] -D
+python setup.py build
 ```
 
 Currently, the quickest way to construct this virtual environment is to
@@ -32,6 +36,8 @@ system level):
 source ../opencmiss/install/virtual_environments/oclibs_venv_py35_release/bin/activate
 cd ../scaffoldmaker-web-demo
 pip install -r requirements.txt
+calmjs npm --install scaffoldmaker_webdemo[webpack] -D
+python setup.py build
 ```
 
 Then run `scaffoldmaker_web`, which will start the webserver on port
