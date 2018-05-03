@@ -1,32 +1,17 @@
 """
 Generates 3-D Left and Right ventricles mesh starting from modified sphere shell mesh.
 """
+
 import os
-import math
-import string
-import random
-from scaffoldmaker.scaffoldmaker import Scaffoldmaker
-from scaffoldmaker.meshtypes.meshtype_2d_plate1 import MeshType_2d_plate1
-from scaffoldmaker.meshtypes.meshtype_2d_plate1 import MeshType_2d_plate1
-from scaffoldmaker.meshtypes.meshtype_2d_platehole1 import MeshType_2d_platehole1
-from scaffoldmaker.meshtypes.meshtype_2d_sphere1 import MeshType_2d_sphere1
-from scaffoldmaker.meshtypes.meshtype_2d_tube1 import MeshType_2d_tube1
-from scaffoldmaker.meshtypes.meshtype_3d_box1 import MeshType_3d_box1
-from scaffoldmaker.meshtypes.meshtype_3d_boxhole1 import MeshType_3d_boxhole1
-from scaffoldmaker.meshtypes.meshtype_3d_heartatria1 import MeshType_3d_heartatria1
-from scaffoldmaker.meshtypes.meshtype_3d_heartventricles1 import MeshType_3d_heartventricles1
-from scaffoldmaker.meshtypes.meshtype_3d_heartventricles2 import MeshType_3d_heartventricles2
-from scaffoldmaker.meshtypes.meshtype_3d_heartventriclesbase1 import MeshType_3d_heartventriclesbase1
-from scaffoldmaker.meshtypes.meshtype_3d_sphereshell1 import MeshType_3d_sphereshell1
-from scaffoldmaker.meshtypes.meshtype_3d_sphereshellseptum1 import MeshType_3d_sphereshellseptum1
-from scaffoldmaker.meshtypes.meshtype_3d_tube1 import MeshType_3d_tube1
-from scaffoldmaker.meshtypes.meshtype_3d_tubeseptum1 import MeshType_3d_tubeseptum1
-from opencmiss.zinc.context import Context
-from opencmiss.zinc.fieldmodule import Fieldmodule
-from opencmiss.zinc.glyph import Glyph
-from opencmiss.zinc.graphics import Graphics
-from opencmiss.zinc.material import Material
 import json
+import math
+from scaffoldmaker.scaffoldmaker import Scaffoldmaker
+from opencmiss.zinc.context import Context
+
+meshes = {
+    meshtype.__name__[len('MeshType_'):]: meshtype
+    for meshtype in Scaffoldmaker().getMeshTypes()
+}
 
 
 def createCylindeLineGraphics(context, region):
@@ -74,7 +59,7 @@ def createSurfaceGraphics(context, region):
     scene.endChange()
 
 
-def exportWebGLJson(region, location, prefix):
+def exportWebGLJson(region):
     '''
     Export graphics into JSON format, one json export represents one
     surface graphics.
@@ -96,57 +81,58 @@ def exportWebGLJson(region, location, prefix):
     return [resources[i].getBuffer()[1] for i in range(number)]
 
 
-def mergeOptions(options1, options2):
-    for item in options2:
-        options1[item] = options2[item]
-    return options1
+def finalizeOptions(meshtype_cls, provided_options):
+    options = {}
+    default_options = meshtype_cls.getDefaultOptions()
+    for key, default_value in default_options.items():
+        provided_value = provided_options.get(key)
+        if type(default_value) != type(provided_value):
+            # TODO figure out how to propagate type mistmatch issue to
+            # response.
+            options[key] = default_value
+        else:
+            options[key] = provided_value
+    return options
 
 
-def meshGeneration(typeName, region, options):
-    typeString = 'MeshType_' + typeName
-    typeClass = eval(typeString)
+def meshGeneration(meshtype_cls, region, options):
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
-    myOptions = mergeOptions(typeClass.getDefaultOptions(), options)
-    typeClass.generateMesh(region, myOptions)
+    myOptions = finalizeOptions(meshtype_cls, options)
+    meshtype_cls.generateMesh(region, myOptions)
     fieldmodule.defineAllFaces()
     fieldmodule.endChange()
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
 
 def outputModel(meshtype, options):
-    location = id_generator()
-    prefix = "temp"
+    """
+    Provided meshtype must exist as a key in the meshes dict in this
+    module.
+    """
+
     # Initialise a sceneviewer for viewing
+    meshtype_cls = meshes.get(meshtype)
     context = Context('output')
     logger = context.getLogger()
     context.getGlyphmodule().defineStandardGlyphs()
     region = context.createRegion()
-
     #readTestRegion(region)
-    meshGeneration(meshtype, region, options)
+    meshGeneration(meshtype_cls, region, options)
     # Create surface graphics which will be viewed and exported
     createSurfaceGraphics(context, region)
     createCylindeLineGraphics(context, region)
     # Export graphics into JSON format
+    return exportWebGLJson(region)
 
-    return exportWebGLJson(region, location, prefix)
-    
-def getMeshTypesString():
-	scaffoldmaker = Scaffoldmaker()
-	meshTypes = scaffoldmaker.getMeshTypes()
-	meshStrings = []
-	for type in meshTypes:
-		meshStrings.append(type.__name__.replace('MeshType_', ''))
-	return meshStrings;
-	
-def getMeshTypeOptions(typeName):
-	typeString = 'MeshType_' + typeName
-	typeClass = eval(typeString)
-	defaultOptions = typeClass.getDefaultOptions()
-	availableOptions = typeClass.getOrderedOptionNames()
-	configurationOptions={}
-	for option in availableOptions:
-		configurationOptions[option] = defaultOptions[option]
-	return configurationOptions
+
+def getMeshTypeOptions(meshtype):
+    """
+    Provided meshtype must exist as a key in the meshes dict in this
+    module, otherwise return value will be None.
+    """
+
+    meshtype_cls = meshes.get(meshtype)
+    if not meshtype_cls:
+        return None
+    defaultOptions = meshtype_cls.getDefaultOptions()
+    return defaultOptions
