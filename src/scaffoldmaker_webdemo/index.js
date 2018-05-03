@@ -1,7 +1,6 @@
 var main = function() {
     var dat = require('dat.gui');
-    var Renderer = require('scaffoldmaker_webdemo/renderer').Renderer;
-    var Zinc = require('scaffoldmaker_webdemo/zinc').Zinc;
+    var Zinc = require('Zinc');
 
     // https://stackoverflow.com/questions/18085540/remove-folder-in-dat-gui
     dat.GUI.prototype.removeFolder = function(name) {
@@ -147,7 +146,7 @@ var main = function() {
 
     function initialise() {
             scene = undefined;
-            zincRenderer = new Renderer(container, window);
+            zincRenderer = new Zinc.Renderer(container, window);
             Zinc.defaultMaterialColor = 0xFFFF9C
             zincRenderer.initialiseVisualisation();
             scene = zincRenderer.createScene("new");

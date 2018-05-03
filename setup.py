@@ -9,13 +9,14 @@ Intended Audience :: Developers
 Operating System :: OS Independent
 Programming Language :: JavaScript
 Programming Language :: Python :: 3
+Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
 """.strip().splitlines()
 
 package_json = {
     "dependencies": {
-        "three": "~0.84.0",
         "dat.gui": "~0.7.1",
+        "zincjs": "~0.28.1",
     },
     "devDependencies": {
         "eslint": "~3.15.0",
@@ -51,6 +52,7 @@ setup(
         'node_modules': {
             'three': 'three/build/three.js',
             'dat.gui': 'dat.gui/build/dat.gui.js',
+            'Zinc': 'zincjs/build/zinc.js',
         },
     },
     package_json=package_json,
