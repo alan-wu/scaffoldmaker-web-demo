@@ -18,7 +18,7 @@ with open(join(dirname(__file__), 'static', 'index.html')) as fd:
 bundle_js = get_distribution('scaffoldmaker_webdemo').get_metadata(
     'calmjs_artifacts/bundle.js')
 bundle_css = get_distribution('scaffoldmaker_webdemo').get_metadata(
-    'calmjs_artifacts/bundle.css')
+    'calmjs_artifacts/bundle.min.css')
 
 store = backend.Store(db_src)
 logger = logging.getLogger(__name__)

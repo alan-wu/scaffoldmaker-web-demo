@@ -47,6 +47,9 @@ setup(
         'webpack': [
             'calmjs.webpack',
         ],
+        'sass': [
+            'calmjs.sassy[libsass]',
+        ],
     },
     extras_calmjs={
         'node_modules': {
@@ -79,6 +82,7 @@ setup(
         'calmjs.artifacts': [
             'bundle.js = calmjs.webpack.artifact:complete_webpack',
             'bundle.css = calmjs.sassy.artifact:complete_css',
+            'bundle.min.css = calmjs.sassy.artifact:complete_compressed_css',
         ],
     },
     # test_suite="",
