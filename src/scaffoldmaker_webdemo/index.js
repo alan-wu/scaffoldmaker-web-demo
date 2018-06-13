@@ -27,7 +27,7 @@ var main = function() {
     var meshGuiControls = undefined;
     var meshPartsGui = undefined;
     var guiControls = new function() {
-            this['Mesh Types'] = "3d_heartventriclesbase1";
+            this['Mesh Types'] = "3d_heartventriclesbase2";
     };
                             
     var removeGeoemtry = function(scene) {
