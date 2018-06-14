@@ -45,7 +45,10 @@ setup(
     ],
     extras_require={
         'webpack': [
-            'calmjs.webpack',
+            'calmjs.webpack>=1.0.2',
+        ],
+        'sass': [
+            'calmjs.sassy[libsass]>=1.0.0,<2',
         ],
     },
     extras_calmjs={
@@ -55,8 +58,14 @@ setup(
             'Zinc': 'zincjs/build/zinc.js',
         },
     },
+    extras_calmjs_scss={
+        'node_modules': {
+            'dat/gui': 'dat.gui/src/dat/gui',
+        },
+    },
     package_json=package_json,
     calmjs_module_registry=['calmjs.module'],
+    calmjs_scss_module_registry=['calmjs.scss'],
     include_package_data=True,
     python_requires='>=3.5',
     build_calmjs_artifacts=True,
@@ -67,8 +76,14 @@ setup(
         'calmjs.module': [
             'scaffoldmaker_webdemo = scaffoldmaker_webdemo',
         ],
+        'calmjs.scss': [
+            'scaffoldmaker_webdemo = scaffoldmaker_webdemo',
+        ],
         'calmjs.artifacts': [
             'bundle.js = calmjs.webpack.artifact:complete_webpack',
+            'bundle.min.js = calmjs.webpack.artifact:optimized_webpack',
+            'bundle.css = calmjs.sassy.artifact:complete_css',
+            'bundle.min.css = calmjs.sassy.artifact:complete_compressed_css',
         ],
     },
     # test_suite="",

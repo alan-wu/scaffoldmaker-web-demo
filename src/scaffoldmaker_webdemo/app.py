@@ -11,12 +11,14 @@ from scaffoldmaker_webdemo import backend
 
 db_src = 'sqlite://'
 app = Sanic()
-app.static('/static', join(dirname(__file__), 'static'))
+
 with open(join(dirname(__file__), 'static', 'index.html')) as fd:
     index_html = fd.read()
 
 bundle_js = get_distribution('scaffoldmaker_webdemo').get_metadata(
     'calmjs_artifacts/bundle.js')
+bundle_css = get_distribution('scaffoldmaker_webdemo').get_metadata(
+    'calmjs_artifacts/bundle.min.css')
 
 store = backend.Store(db_src)
 logger = logging.getLogger(__name__)
@@ -88,8 +90,13 @@ async def getMeshTypeOptions(request):
 
 
 @app.route('/scaffoldmaker_webdemo.js')
-async def bundle(request):
+async def serve_js(request):
     return text(bundle_js, headers={'Content-Type': 'application/javascript'})
+
+
+@app.route('/scaffoldmaker_webdemo.css')
+async def serve_css(request):
+    return text(bundle_css, headers={'Content-Type': 'text/css'})
 
 
 @app.route('/')
