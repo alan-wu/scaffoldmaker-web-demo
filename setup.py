@@ -81,7 +81,7 @@ setup(
         ],
         'calmjs.artifacts': [
             'bundle.js = calmjs.webpack.artifact:complete_webpack',
-            'bundle.min.js = calmjs.webpack.artifact:optimized_webpack',
+            'bundle.min.js = calmjs.webpack.artifact:optimize_webpack',
             'bundle.css = calmjs.sassy.artifact:complete_css',
             'bundle.min.css = calmjs.sassy.artifact:complete_compressed_css',
         ],
