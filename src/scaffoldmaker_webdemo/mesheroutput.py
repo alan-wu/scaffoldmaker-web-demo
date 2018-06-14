@@ -35,6 +35,7 @@ def createCylindeLineGraphics(context, region):
     lineAttr.setShapeType(lineAttr.SHAPE_TYPE_CIRCLE_EXTRUSION)
     lineAttr.setBaseSize([0.007, 0.007])
     lines.setMaterial(material)
+    lines.setExterior(True)
      # Let the scene render the scene.
     scene.endChange()
 
@@ -52,6 +53,7 @@ def createSurfaceGraphics(context, region):
     surface = scene.createGraphicsSurfaces()
     surface.setCoordinateField(finite_element_field)
     surface.setMaterial(material)
+    surface.setExterior(True)
     scene.endChange()
 
 
