@@ -23,17 +23,13 @@ def createCylindeLineGraphics(context, region):
     material_module = context.getMaterialmodule()
     material = material_module.findMaterialByName('silver')
 
-    tm = context.getTessellationmodule()
-    tessellation = tm.getDefaultTessellation()
-    tessellation.setCircleDivisions(8)
-
     scene.beginChange()
     lines = scene.createGraphicsLines()
     finite_element_field = field_module.findFieldByName('coordinates')
     lines.setCoordinateField(finite_element_field)
     lineAttr = lines.getGraphicslineattributes()
     lineAttr.setShapeType(lineAttr.SHAPE_TYPE_CIRCLE_EXTRUSION)
-    lineAttr.setBaseSize([0.007, 0.007])
+    lineAttr.setBaseSize([0.01, 0.01])
     lines.setMaterial(material)
     lines.setExterior(True)
      # Let the scene render the scene.
@@ -117,6 +113,11 @@ def outputModel(meshtype, options):
     #readTestRegion(region)
     meshGeneration(meshtype_cls, region, options)
     # Create surface graphics which will be viewed and exported
+    tm = context.getTessellationmodule()
+    tessellation = tm.getDefaultTessellation()
+    tessellation.setCircleDivisions(6)
+    tessellation.setMinimumDivisions(1)
+
     createSurfaceGraphics(context, region)
     createCylindeLineGraphics(context, region)
     # Export graphics into JSON format
