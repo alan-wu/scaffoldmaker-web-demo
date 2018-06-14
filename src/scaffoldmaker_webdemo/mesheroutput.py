@@ -5,8 +5,10 @@ Generates 3-D Left and Right ventricles mesh starting from modified sphere shell
 import os
 import json
 import math
+import collections
 from scaffoldmaker.scaffoldmaker import Scaffoldmaker
 from opencmiss.zinc.context import Context
+from opencmiss.zinc.material import Material
 
 meshes = {
     meshtype.__name__[len('MeshType_'):]: meshtype
@@ -19,19 +21,16 @@ def createCylindeLineGraphics(context, region):
     scene = region.getScene()
     field_module = region.getFieldmodule()
     material_module = context.getMaterialmodule()
-    material = material_module.findMaterialByName('copper')
+    material = material_module.findMaterialByName('silver')
 
     tm = context.getTessellationmodule()
-    tessellation = tm.createTessellation()
-    tessellation.setCircleDivisions(1)
-    tessellation.setRefinementFactors([4])
+    tessellation = tm.getDefaultTessellation()
+    tessellation.setCircleDivisions(8)
 
     scene.beginChange()
     lines = scene.createGraphicsLines()
     finite_element_field = field_module.findFieldByName('coordinates')
     lines.setCoordinateField(finite_element_field)
-    lines.setTessellation(tessellation)
-
     lineAttr = lines.getGraphicslineattributes()
     lineAttr.setShapeType(lineAttr.SHAPE_TYPE_CIRCLE_EXTRUSION)
     lineAttr.setBaseSize([0.007, 0.007])
@@ -45,16 +44,13 @@ def createSurfaceGraphics(context, region):
     scene = region.getScene()
     scene.beginChange()
     fieldmodule = region.getFieldmodule()
-    tm = context.getTessellationmodule()
-    tessellation = tm.createTessellation()
-    tessellation.setMinimumDivisions([4,4,1])
     material_module.defineStandardMaterials()
     material = material_module.findMaterialByName('muscle')
-
+    material.setAttributeReal3(Material.ATTRIBUTE_DIFFUSE, [0.7, 0.12, 0.1])
+    material.setAttributeReal3(Material.ATTRIBUTE_AMBIENT, [0.7, 0.14, 0.11])
     finite_element_field = fieldmodule.findFieldByName('coordinates')
     surface = scene.createGraphicsSurfaces()
     surface.setCoordinateField(finite_element_field)
-    surface.setTessellation(tessellation)
     surface.setMaterial(material)
     scene.endChange()
 
@@ -135,4 +131,8 @@ def getMeshTypeOptions(meshtype):
     if not meshtype_cls:
         return None
     defaultOptions = meshtype_cls.getDefaultOptions()
-    return defaultOptions
+    orderedNames = meshtype_cls.getOrderedOptionNames()
+    orderedOptions=collections.OrderedDict()
+    for option in orderedNames:
+        orderedOptions.update({option:defaultOptions[option]})
+    return orderedOptions

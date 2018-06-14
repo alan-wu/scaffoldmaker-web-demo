@@ -1,5 +1,5 @@
 import logging
-from json import loads
+from json import loads, dumps as jdumps
 from time import time
 from os.path import dirname
 from os.path import join
@@ -84,7 +84,7 @@ async def getMeshTypeOptions(request):
     options = mesheroutput.getMeshTypeOptions(request.args.get('type'))
     if options is None:
         return json({'error': 'no such mesh type'}, status=400)
-    return json(options)
+    return json(options, dumps=jdumps)
 
 
 @app.route('/scaffoldmaker_webdemo.js')
