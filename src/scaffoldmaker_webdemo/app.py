@@ -1,5 +1,5 @@
 import logging
-from json import loads, dumps as jdumps
+from json import loads, dumps
 from time import time
 from os.path import dirname
 from os.path import join
@@ -14,6 +14,9 @@ app = Sanic()
 
 with open(join(dirname(__file__), 'static', 'index.html')) as fd:
     index_html = fd.read()
+    
+with open(join(dirname(__file__), 'static', 'view.json')) as vd:
+    view_json = loads(vd.read())
 
 bundle_js = get_distribution('scaffoldmaker_webdemo').get_metadata(
     'calmjs_artifacts/bundle.js')
@@ -86,7 +89,7 @@ async def getMeshTypeOptions(request):
     options = mesheroutput.getMeshTypeOptions(request.args.get('type'))
     if options is None:
         return json({'error': 'no such mesh type'}, status=400)
-    return json(options, dumps=jdumps)
+    return json(options, dumps=dumps)
 
 
 @app.route('/scaffoldmaker_webdemo.js')
@@ -98,6 +101,9 @@ async def serve_js(request):
 async def serve_css(request):
     return text(bundle_css, headers={'Content-Type': 'text/css'})
 
+@app.route('/static/view.json')
+async def view(request):
+    return json(view_json)
 
 @app.route('/')
 async def root(request):
