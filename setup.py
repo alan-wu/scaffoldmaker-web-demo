@@ -45,7 +45,7 @@ setup(
     ],
     extras_require={
         'webpack': [
-            'calmjs.webpack>=1.0.2',
+            'calmjs.webpack>=1.2.0',
         ],
         'sass': [
             'calmjs.sassy[libsass]>=1.0.0,<2',
