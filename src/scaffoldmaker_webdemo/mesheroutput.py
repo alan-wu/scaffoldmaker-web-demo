@@ -15,6 +15,8 @@ meshes = {
     for meshtype in Scaffoldmaker().getMeshTypes()
 }
 
+currentRegion = None 
+
 
 def createCylindeLineGraphics(context, region):
     '''create cylinders which outline the shapes of the heart'''
@@ -36,7 +38,7 @@ def createCylindeLineGraphics(context, region):
     scene.endChange()
 
 
-def createSurfaceGraphics(context, region):
+def createSurfaceGraphics(context, region, annotationGroups):
     material_module = context.getMaterialmodule()
     scene = region.getScene()
     scene.beginChange()
@@ -46,10 +48,14 @@ def createSurfaceGraphics(context, region):
     material.setAttributeReal3(Material.ATTRIBUTE_DIFFUSE, [0.7, 0.12, 0.1])
     material.setAttributeReal3(Material.ATTRIBUTE_AMBIENT, [0.7, 0.14, 0.11])
     finite_element_field = fieldmodule.findFieldByName('coordinates')
-    surface = scene.createGraphicsSurfaces()
-    surface.setCoordinateField(finite_element_field)
-    surface.setMaterial(material)
-    surface.setExterior(True)
+    for annotationGroup in annotationGroups:
+        groupField = annotationGroup.getGroup()
+        surface = scene.createGraphicsSurfaces()
+        if groupField:
+            surface.setSubgroupField(groupField)
+        surface.setCoordinateField(finite_element_field)
+        surface.setExterior(True)        
+        surface.setMaterial(material)
     scene.endChange()
 
 
@@ -88,37 +94,57 @@ def finalizeOptions(meshtype_cls, provided_options):
             options[key] = provided_value
     return options
 
+def getXiCoordinates(coordiantes):
+    print(coordiantes)
+    fieldmodule = currentRegion.getFieldmodule()
+    mesh = fieldmodule.findMeshByDimension(3)
+    finite_element_field = fieldmodule.findFieldByName('coordinates')
+    meshLocationField = fieldmodule.createFieldFindMeshLocation(finite_element_field, finite_element_field, mesh)
+    cache = fieldmodule.createFieldcache()
+    cache.setFieldReal(finite_element_field, coordiantes)
+    result = meshLocationField.evaluateMeshLocation(cache, 3)
+    outputs = {}
+    outputs["element"] = result[0].getIdentifier()
+    outputs["xi"] = result[1]
+    print(outputs)
+    return outputs
+    
 
 def meshGeneration(meshtype_cls, region, options):
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
     myOptions = finalizeOptions(meshtype_cls, options)
-    meshtype_cls.generateMesh(region, myOptions)
+    groups = meshtype_cls.generateMesh(region, myOptions)
     fieldmodule.defineAllFaces()
     fieldmodule.endChange()
-
+    for annotationGroup in groups:
+        annotationGroup.addSubelements()
+    return groups
 
 def outputModel(meshtype, options):
     """
     Provided meshtype must exist as a key in the meshes dict in this
     module.
     """
-
+    global currentRegion
+    print(currentRegion)
     # Initialise a sceneviewer for viewing
     meshtype_cls = meshes.get(meshtype)
     context = Context('output')
     logger = context.getLogger()
     context.getGlyphmodule().defineStandardGlyphs()
     region = context.createRegion()
+    currentRegion = region
+    print(currentRegion)
     #readTestRegion(region)
-    meshGeneration(meshtype_cls, region, options)
+    annotations = meshGeneration(meshtype_cls, region, options)
     # Create surface graphics which will be viewed and exported
     tm = context.getTessellationmodule()
     tessellation = tm.getDefaultTessellation()
     tessellation.setCircleDivisions(6)
     tessellation.setMinimumDivisions(1)
 
-    createSurfaceGraphics(context, region)
+    createSurfaceGraphics(context, region, annotations)
     createCylindeLineGraphics(context, region)
     # Export graphics into JSON format
     return exportWebGLJson(region)

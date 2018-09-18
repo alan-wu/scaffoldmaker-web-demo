@@ -16,7 +16,7 @@ Programming Language :: Python :: 3.6
 package_json = {
     "dependencies": {
         "dat.gui": "~0.7.1",
-        "zincjs": "~0.28.4",
+        "zincjs": "~0.29.3",
     },
     "devDependencies": {
         "eslint": "~3.15.0",
@@ -53,9 +53,8 @@ setup(
     },
     extras_calmjs={
         'node_modules': {
-            'three': 'three/build/three.js',
             'dat.gui': 'dat.gui/build/dat.gui.js',
-            'Zinc': 'zincjs/build/zinc.js',
+            'zincjs': 'zincjs/build/zinc.js',
         },
     },
     extras_calmjs_scss={

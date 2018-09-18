@@ -22,11 +22,50 @@
 				display:block;
 			}
 			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+			#tooltipcontainer {
+				position: fixed;
+				background-color: #fff;
+				pointer-events: none;
+				cursor: pointer;
+			}
+			
+			.tooltip {
+				position: relative;
+				display: inline-block;
+				border-bottom: 1px dotted black;
+				pointer-events: none;
+			}
+			
+			.tooltip .tooltiptext {
+			    visibility: hidden;
+			    width: 120px;
+			    background-color: #555;
+			    color: #fff;
+			    text-align: center;
+			    border-radius: 6px;
+			    padding: 5px 0;
+			    position: absolute;
+			    z-index: 1;
+			    bottom: 125%;
+			    left: 50%;
+			    margin-left: -60px;
+			    opacity: 0;
+			    transition: opacity 1s;
+			    pointer-events: none;
+			}
+			
 		</style>
 	</head>
 
 	<body style="height:100%">
+		<div id="tooltipcontainer">
+			<div class="tooltip" id="tip">
+				<span class="tooltiptext" id="tiptext"> Tooltip text</span>
+			</div>
+		</div>
 		<div id="meshGui">
+		</div>
+		<div id="csgGui">
 		</div>
 		<link rel="stylesheet" type="text/css" href="/scaffoldmaker_webdemo.css">
 		<script src="/scaffoldmaker_webdemo.js"></script>

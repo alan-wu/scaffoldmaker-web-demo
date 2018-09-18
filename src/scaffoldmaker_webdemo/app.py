@@ -78,7 +78,20 @@ async def generator(request):
 
     return json(response)
 
-
+@app.route('/getXiCoordinates')
+async def getXiCoordinates(request):
+    coordinates = [0.0, 0.0, 0.0]
+    for k, values in request.args.items():
+        v = values[0]
+        if k == 'xi1':
+            coordinates[0] = float(v)
+        elif k == 'xi2':
+            coordinates[1] = float(v)
+        elif k == 'xi3':
+            coordinates[2] = float(v)
+    xiCoordinates = mesheroutput.getXiCoordinates(coordinates)
+    return json(xiCoordinates)
+            
 @app.route('/getMeshTypes')
 async def getMeshTypes(request):
     return json(sorted(mesheroutput.meshes.keys()))
