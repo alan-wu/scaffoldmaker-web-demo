@@ -6,13 +6,13 @@ import os
 import json
 import math
 import collections
-from scaffoldmaker.scaffoldmaker import Scaffoldmaker
+from scaffoldmaker.scaffolds import Scaffolds
 from opencmiss.zinc.context import Context
 from opencmiss.zinc.material import Material
 
 meshes = {
     meshtype.__name__[len('MeshType_'):]: meshtype
-    for meshtype in Scaffoldmaker().getMeshTypes()
+    for meshtype in Scaffolds().getMeshTypes()
 }
 
 currentRegion = None 
