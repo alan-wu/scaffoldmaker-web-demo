@@ -16,7 +16,7 @@ Programming Language :: Python :: 3.6
 package_json = {
     "dependencies": {
         "dat.gui": "~0.7.1",
-        "zincjs": "~0.29.3",
+        "zincjs": "~0.29.4",
     },
     "devDependencies": {
         "eslint": "~3.15.0",

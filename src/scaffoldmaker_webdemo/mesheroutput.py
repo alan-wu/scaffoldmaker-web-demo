@@ -15,8 +15,9 @@ meshes = {
     for meshtype in Scaffolds().getMeshTypes()
 }
 
-currentRegion = None 
-
+currentRegion = None
+currentOptions = None
+currentMeshtypes = None
 
 def createCylindeLineGraphics(context, region):
     '''create cylinders which outline the shapes of the heart'''
@@ -36,7 +37,6 @@ def createCylindeLineGraphics(context, region):
     lines.setExterior(True)
      # Let the scene render the scene.
     scene.endChange()
-
 
 def createSurfaceGraphics(context, region, annotationGroups):
     material_module = context.getMaterialmodule()
@@ -94,6 +94,20 @@ def finalizeOptions(meshtype_cls, provided_options):
             options[key] = provided_value
     return options
 
+def getWorldCoordinates(elementId, xiCoordinates):
+    print(elementId, xiCoordinates)
+    fieldmodule = currentRegion.getFieldmodule()
+    mesh = fieldmodule.findMeshByDimension(3)
+    element = mesh.findElementByIdentifier(elementId)
+    finite_element_field = fieldmodule.findFieldByName('coordinates')
+    cache = fieldmodule.createFieldcache()
+    cache.setMeshLocation(element, xiCoordinates)
+    result = finite_element_field.evaluateReal(cache, 3)
+    outputs = {}
+    outputs["coordinates"] = result[1]
+    print(outputs)
+    return outputs
+
 def getXiCoordinates(coordiantes):
     print(coordiantes)
     fieldmodule = currentRegion.getFieldmodule()
@@ -111,9 +125,11 @@ def getXiCoordinates(coordiantes):
     
 
 def meshGeneration(meshtype_cls, region, options):
+    global currentOptions
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
     myOptions = finalizeOptions(meshtype_cls, options)
+    currentOptions = myOptions
     groups = meshtype_cls.generateMesh(region, myOptions)
     fieldmodule.defineAllFaces()
     fieldmodule.endChange()
@@ -127,9 +143,11 @@ def outputModel(meshtype, options):
     module.
     """
     global currentRegion
+    global currentMeshtype
     print(currentRegion)
     # Initialise a sceneviewer for viewing
     meshtype_cls = meshes.get(meshtype)
+    currentMeshtype = meshtype
     context = Context('output')
     logger = context.getLogger()
     context.getGlyphmodule().defineStandardGlyphs()
@@ -149,13 +167,27 @@ def outputModel(meshtype, options):
     # Export graphics into JSON format
     return exportWebGLJson(region)
 
+def getCurrentSettings():
+    if currentMeshtype and currentOptions:
+        meshtype_cls = meshes.get(currentMeshtype)
+        if not meshtype_cls:
+            return None
+        outputArray = {}
+        orderedNames = meshtype_cls.getOrderedOptionNames()
+        orderedOptions=collections.OrderedDict()
+        for option in orderedNames:
+            orderedOptions.update({option:currentOptions[option]})
+        outputArray["options"]  = orderedOptions
+        outputArray["meshtype"] = currentMeshtype
+        return outputArray
+    return None
+    
 
 def getMeshTypeOptions(meshtype):
     """
     Provided meshtype must exist as a key in the meshes dict in this
     module, otherwise return value will be None.
     """
-
     meshtype_cls = meshes.get(meshtype)
     if not meshtype_cls:
         return None

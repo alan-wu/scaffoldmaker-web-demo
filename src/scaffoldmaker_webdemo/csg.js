@@ -48,7 +48,6 @@ exports.csg = function(sceneIn, zincRendererIn) {
   }
   
   var mergeGeometry = function(zincGeometry) {
-    console.log(zincGeometry.groupName);
     if (zincGeometry.groupName && zincGeometry.groupName !== "") {
       if (currentGeometry === undefined) {
         currentGeometry = zincGeometry.geometry.clone();

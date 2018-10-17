@@ -17,6 +17,9 @@ with open(join(dirname(__file__), 'static', 'index.html')) as fd:
     
 with open(join(dirname(__file__), 'static', 'view.json')) as vd:
     view_json = loads(vd.read())
+    
+with open(join(dirname(__file__), 'static', 'testFile.json')) as vd:
+    testfile_json = loads(vd.read())
 
 bundle_js = get_distribution('scaffoldmaker_webdemo').get_metadata(
     'calmjs_artifacts/bundle.js')
@@ -78,6 +81,23 @@ async def generator(request):
 
     return json(response)
 
+@app.route('/getWorldCoordinates')
+async def getWorldCoordinates(request):
+    xiCoordinates = [0.0, 0.0, 0.0]
+    elementId = 1
+    for k, values in request.args.items():
+        v = values[0]
+        if k == 'element':
+            elementId = int(v)
+        elif k == 'xi1':
+            xiCoordinates[0] = float(v)
+        elif k == 'xi2':
+            xiCoordinates[1] = float(v)
+        elif k == 'xi3':
+            xiCoordinates[2] = float(v)
+    coordinates = mesheroutput.getWorldCoordinates(elementId, xiCoordinates)
+    return json(coordinates)
+
 @app.route('/getXiCoordinates')
 async def getXiCoordinates(request):
     coordinates = [0.0, 0.0, 0.0]
@@ -96,6 +116,12 @@ async def getXiCoordinates(request):
 async def getMeshTypes(request):
     return json(sorted(mesheroutput.meshes.keys()))
 
+@app.route('/getCurrentSettings')
+async def getCurrentSettings(request):
+    settings = mesheroutput.getCurrentSettings()
+    if settings is None:
+        return json({'error': 'no such mesh type'}, status=400)
+    return json(settings, dumps=dumps)
 
 @app.route('/getMeshTypeOptions')
 async def getMeshTypeOptions(request):
@@ -117,6 +143,10 @@ async def serve_css(request):
 @app.route('/static/view.json')
 async def view(request):
     return json(view_json)
+
+@app.route('/static/testFile.json')
+async def view(request):
+    return json(testfile_json)
 
 @app.route('/')
 async def root(request):

@@ -47,14 +47,12 @@ var ToolTip = function() {
   setupToolTipContainer();
 }
 
-
-
-
 var main = function() {
     var dat = require('dat.gui');
     var Zinc = require('zincjs');
     var THREE = Zinc.THREE;
     var toolTip = new ToolTip();
+    
     console.log(toolTip)
 
     // https://stackoverflow.com/questions/18085540/remove-folder-in-dat-gui
@@ -109,6 +107,32 @@ var main = function() {
     {
             zincRenderer.viewAll();
     }
+    
+    function getLandmarksJSON() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+          var settings = JSON.parse(xmlhttp.responseText);
+          var landmarksJson = {};
+          landmarksJson.options = settings.options;
+          landmarksJson.meshtype = settings.meshtype;
+          landmarksJson.landmarks = [];
+          for (var i = 0; i < landmarks.length; i++) {
+            var landmarkJson = {};
+            landmarkJson.name = landmarks[i].name;
+            landmarkJson.xi = landmarks[i].userData.xi;
+            landmarkJson.element = landmarks[i].userData.element;
+            landmarksJson.landmarks.push(landmarkJson);
+          }
+          var jsonString = JSON.stringify(landmarksJson);
+          console.log(landmarksJson);
+          console.log(jsonString);
+        }     
+      }
+      var requestString = "./getCurrentSettings";
+      xmlhttp.open("GET", requestString, true);
+      xmlhttp.send();
+    }
 
     var addItemToURL = function(originalString, paramName) {
             var compatibleParamName = encodeURIComponent(paramName);
@@ -128,8 +152,70 @@ var main = function() {
       }
     }
     
+    var createMarker = function(location, labelIn) {
+      var label = labelIn;
+      if (label == null || label == "") {
+        label = prompt("Please enter the annotation", "Landmark");
+      }
+      if (!(label == null || label == "")) {
+        var geometry = new THREE.SphereGeometry(0.02, 16, 16);
+        var material = new THREE.MeshBasicMaterial({
+          color : 0x00ff00
+        });
+        var sphere = new THREE.Mesh(geometry, material);
+        sphere.position.copy(location);
+        scene.addObject(sphere);
+        landmarks.push(sphere);
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var xi = JSON.parse(xmlhttp.responseText);
+                        if (xi && xi.element && xi.xi) {
+                          sphere.userData.xi = xi.xi;
+                          sphere.userData.element = xi.element;
+                          sphere.name = label;
+                          //getLandmarksJSON();
+                        }
+                }     
+        }
+        var requestString = "./getXiCoordinates" + "?xi1=" + location.x + "&xi2=" + location.y + "&xi3=" + location.z;
+        xmlhttp.open("GET", requestString, true);
+        xmlhttp.send();
+      }
+      return true;
+    }
+    
+    var addSphereFromLandmarksData = function(landmarksData) {
+      var argumentString = "element=" + landmarksData.element;
+      argumentString = argumentString + "&xi1="+landmarksData.xi[0] + "&xi2="+landmarksData.xi[1] +
+        "&xi3="+landmarksData.xi[2];
+      console.log(argumentString)
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+          var returnedObject = JSON.parse(xmlhttp.responseText);
+          console.log(returnedObject)
+          var coords = new THREE.Vector3( returnedObject["coordinates"][0], returnedObject["coordinates"][1],
+              returnedObject["coordinates"][2] );
+          createMarker(coords, landmarksData.name);
+        }
+      }
+      xmlhttp.open("GET", "./getWorldCoordinates?" + argumentString, true);
+      xmlhttp.send();
+    } 
+    
+    
+    var importDataDownloadedCompletedCallback = function(dataLandmarks) {
+      return function() {
+        if (dataLandmarks) {
+            for (var i = 0; i < dataLandmarks.length; i++) {
+              addSphereFromLandmarksData(dataLandmarks[i]);
+            }
+        }
+      }
+    }
 
-    var confirmRemesh = function() {
+    var confirmRemesh = function(itemDownloadCallback, allCompletedCallback) {
             var currentScene = zincRenderer.getCurrentScene();
             currentScene.clearAll();
             csg.reset();
@@ -143,16 +229,16 @@ var main = function() {
                     argumentString = addItemToURL(argumentString, key);
             }
             var finalURL = "/generator?" + argumentString;
-            currentScene.loadMetadataURL(finalURL, _addOrganPartCallback());
+            currentScene.loadMetadataURL(finalURL, itemDownloadCallback, allCompletedCallback);
     }
 
     var setupDatGuiPreprocess = function() {
             var xmlhttp = new XMLHttpRequest();
             xmlhttp.onreadystatechange = function() {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    var meshTypes = JSON.parse(xmlhttp.responseText);
-                            setupDatGui(meshTypes);
-                    }
+              if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var meshTypes = JSON.parse(xmlhttp.responseText);
+                setupDatGui(meshTypes);
+              }
             }
             xmlhttp.open("GET", "./getMeshTypes", true);
             xmlhttp.send();
@@ -177,28 +263,57 @@ var main = function() {
                 }
             }
     }
+    
+    var updateGuiOptions = function(options) {
+      gui.removeFolder('Parameters');
+      meshGuiControls = function() {
+      };
+      meshPartsGui = gui.addFolder('Parameters');
+      meshPartsGui.open();
+      modifyOptions(options);
+      var confirmButton = { 'Confirm':function(){ confirmRemesh(_addOrganPartCallback()) }};
+      meshPartsGui.add(confirmButton, 'Confirm');
+    }
 
     var changeMeshTypesControl = function() {
-            gui.removeFolder('Parameters');
-            meshGuiControls = function() {
-            };
-            meshPartsGui = gui.addFolder('Parameters');
-            meshPartsGui.open();
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = function() {
-                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                            var options = JSON.parse(xmlhttp.responseText);
-                            modifyOptions(options);
-                            var confirmButton = { 'Confirm':function(){ confirmRemesh() }};
-                            meshPartsGui.add(confirmButton, 'Confirm');
-                            confirmRemesh();
-                    }     
-            }
-            var requestString = "./getMeshTypeOptions" + "?type=" + guiControls['Mesh Types'];
-            xmlhttp.open("GET", requestString, true);
-            xmlhttp.send();
-
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+          var options = JSON.parse(xmlhttp.responseText);
+          updateGuiOptions(options);
+          confirmRemesh(_addOrganPartCallback());
+        }     
+      }
+      var requestString = "./getMeshTypeOptions" + "?type=" + guiControls['Mesh Types'];
+      xmlhttp.open("GET", requestString, true);
+      xmlhttp.send();
     }
+    
+    //Data include meshtype, options and landmark
+    var importData = function(data) {
+      if (data && data.meshtype && data.options) {
+        guiControls['Mesh Types'] = data.meshtype;
+        updateGuiOptions(data.options);
+        confirmRemesh(_addOrganPartCallback(), importDataDownloadedCompletedCallback(data.landmarks));
+      } 
+    }
+    
+    var read = function() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+          var data = JSON.parse(xmlhttp.responseText);
+          importData(data);
+        }
+      }
+      xmlhttp.open("GET", "/static/testFile.json", true);
+      xmlhttp.send();
+    }
+    
+    var write = function() {
+      getLandmarksJSON();
+    }
+    
 
     var setupDatGui = function(meshTypes) {
             gui = new dat.GUI({autoPlace: false, width: 350});
@@ -208,46 +323,22 @@ var main = function() {
             var customContainer = document.getElementById("meshGui").append(gui.domElement);
             var viewAllButton = { 'View All':function(){ viewAll() }};
             var resetButton = { 'Reset':function(){ resetView() }};
+            var readButton = { 'Read':function(){ read() }};
+            var writeButton = { 'Write':function(){ write() }};
             gui.add(viewAllButton, 'View All');
             gui.add(resetButton, 'Reset');
+            gui.add(readButton, 'Read');
+            gui.add(writeButton, 'Write');
             changeMeshTypesControl();
     }
-    
-    var createMarker = function(location) {
-      var geometry = new THREE.SphereGeometry(0.02, 16, 16);
-      var material = new THREE.MeshBasicMaterial({
-        color : 0x00ff00
-      });
-      var sphere = new THREE.Mesh(geometry, material);
-      sphere.position.copy(location);
-      scene.addObject(sphere);
-      landmarks.push(sphere);
-      var xmlhttp = new XMLHttpRequest();
-      xmlhttp.onreadystatechange = function() {
-              if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                      var xi= JSON.parse(xmlhttp.responseText);
-                      if (xi && xi.element && xi.xi) {
-                        xiString = "Element " + xi.element + ", xi: " + xi.xi[0] + ", " + xi.xi[1] + ", " +xi.xi[2];
-                        console.log(sphere)
-                        sphere.name = xiString
-                      }
-              }     
-      }
-      var requestString = "./getXiCoordinates" + "?xi1=" + location.x + "&xi2=" + location.y + "&xi3=" + location.z;
-      xmlhttp.open("GET", requestString, true);
-      xmlhttp.send();
-      
-      return true;
-    }
-
-
+        
     var _pickingCallback = function() {
       return function(intersects, window_x, window_y) {
         for (var i = 0; i < intersects.length; i++) {
           if (intersects[i].object.userData && (false == Array.isArray(intersects[i].object.userData))) {
             if (intersects[i].object.userData.groupName === "intersect") {
               console.log(intersects[i])
-              return createMarker(intersects[i].point);
+              return createMarker(intersects[i].point, null);
             }
           }
         }
@@ -257,9 +348,13 @@ var main = function() {
     var _hoverCallback = function() {
       return function(intersects, window_x, window_y) {
         for (var i = 0; i < intersects.length; i++) {
-          if (intersects[i].object.name && intersects[i].object.name.includes("Element")) {
-            console.log(intersects[i].object.name)
-            toolTip.setText(intersects[i].object.name);
+          var currentObject = intersects[i].object;
+          //if (intersects[i].object.name && intersects[i].object.name.includes("Element")) {
+          if (currentObject.name && currentObject.userData.xi && currentObject.userData.element) {
+            var displayString = currentObject.name + "<br />{ Element " + 
+              currentObject.userData.element + ", xi: " + currentObject.userData.xi[0] + ", " + 
+              currentObject.userData.xi[1] + ", " + currentObject.userData.xi[2]+"}";
+            toolTip.setText(displayString);
             toolTip.show(window_x, window_y);
             return;
           }
