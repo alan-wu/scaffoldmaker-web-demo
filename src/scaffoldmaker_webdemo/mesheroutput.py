@@ -51,6 +51,8 @@ def createSurfaceGraphics(context, region, annotationGroups):
     for annotationGroup in annotationGroups:
         groupField = annotationGroup.getGroup()
         surface = scene.createGraphicsSurfaces()
+        tessellation = surface.getTessellation()
+        tessellation.setRefinementFactors([4])
         if groupField:
             surface.setSubgroupField(groupField)
         surface.setCoordinateField(finite_element_field)
