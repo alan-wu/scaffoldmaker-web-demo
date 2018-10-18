@@ -175,7 +175,7 @@ exports.csg = function(sceneIn, zincRendererIn) {
     boxGeometry.morph.visible = false;
     if (plane === undefined) {
       plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
-      planeHelper = new THREE.PlaneHelper(plane, 3, 0xff0000);
+      planeHelper = new THREE.PlaneHelper(plane, 2, 0xff0000);
       scene.addObject(planeHelper);
     }
   //scene.viewAllWithBoundingBox(currentBoundingBox);
