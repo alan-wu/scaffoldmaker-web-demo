@@ -47,13 +47,86 @@ var ToolTip = function() {
   setupToolTipContainer();
 }
 
+var PortalModal = function(modalIn) {
+  var modal = modalIn;
+  var messageElement = modal.querySelector("p");
+  var inputElement = modal.querySelector("#textInput");
+  var closeBtn = modal.querySelector(".small.close-modal-btn");
+  var okBtn = modal.querySelector(".small.ok-modal-btn");
+  var pressedCallback = undefined;
+  
+  
+  var okPressed = function() {
+    modal.close();
+    if (pressedCallback)
+      pressedCallback(true, inputElement.value);
+  }
+  
+  var closePressed = function() {
+    modal.close();
+    if (pressedCallback)
+      pressedCallback(false, inputElement.value);
+  }
+  
+  modal.querySelector("form").addEventListener('keydown', function(event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      okPressed();
+    }
+  }, false);
+  
+  okBtn.addEventListener('click', function() {
+    okPressed();
+  });
+  
+  closeBtn.addEventListener('click', function() {
+    closePressed();
+  });
+  
+  var setCallback = function(pressedCallbackIn) {
+    pressedCallback = pressedCallbackIn;
+  }
+  
+  this.prompt = function(message, defaultAnswer, pressedCallbackIn) {
+    messageElement.innerHTML = message;
+    inputElement.style.display = "inline";
+    inputElement.value = defaultAnswer;
+    closeBtn.style.display = "inline";
+    setCallback(pressedCallbackIn);
+    modal.showModal();
+    inputElement.focus();
+  }
+  
+  this.alert = function(message, pressedCallbackIn) {
+    messageElement.innerHTML = message;
+    inputElement.style.display = "none";
+    closeBtn.style.display = "none";
+    setCallback(pressedCallbackIn);
+    modal.showModal();
+    okBtn.focus();
+  }
+  
+  this.confirm = function(message, pressedCallbackIn) {
+    messageElement.innerHTML = message;
+    inputElement.style.display = "none";
+    closeBtn.style.display = "inline";
+    setCallback(pressedCallbackIn);
+    modal.showModal();
+    okBtn.focus();
+  }
+}
+
+
 var main = function() {
     var dat = require('dat.gui');
     var Zinc = require('zincjs');
     var THREE = Zinc.THREE;
     var toolTip = new ToolTip();
-    
-    console.log(toolTip)
+    var currentWorkspaceURL = undefined;
+    var currentFilename = undefined;
+    var changesCommitted = false;
+    var modal = new PortalModal(document.querySelector(".portalmodal"));
+
 
     // https://stackoverflow.com/questions/18085540/remove-folder-in-dat-gui
     dat.GUI.prototype.removeFolder = function(name) {
@@ -81,6 +154,7 @@ var main = function() {
     var meshGuiControls = undefined;
     var meshPartsGui = undefined;
     var landmarks = [];
+    var changed = false;
     var guiControls = new function() {
             this['Mesh Types'] = "3d_heartventriclesbase2";
     };
@@ -113,6 +187,7 @@ var main = function() {
       xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
           var settings = JSON.parse(xmlhttp.responseText);
+          /*
           var landmarksJson = {};
           landmarksJson.options = settings.options;
           landmarksJson.meshtype = settings.meshtype;
@@ -124,8 +199,9 @@ var main = function() {
             landmarkJson.element = landmarks[i].userData.element;
             landmarksJson.landmarks.push(landmarkJson);
           }
-          var jsonString = JSON.stringify(landmarksJson);
-          console.log(landmarksJson);
+          */
+          var jsonString = JSON.stringify(settings);
+          console.log(settings);
           console.log(jsonString);
         }     
       }
@@ -152,15 +228,12 @@ var main = function() {
       }
     }
     
-    var createMarker = function(location, labelIn) {
-      var label = labelIn;
-      if (label == null || label == "") {
-        label = prompt("Please enter the annotation", "Landmark");
-      }
+    var registerLandmarks = function(location, label) {
       if (!(label == null || label == "")) {
         var geometry = new THREE.SphereGeometry(0.02, 16, 16);
-        var material = new THREE.MeshBasicMaterial({
-          color : 0x00ff00
+        var material = new THREE.MeshLambertMaterial({
+          color : 0x00ff00,
+          emissive :0x008800
         });
         var sphere = new THREE.Mesh(geometry, material);
         sphere.position.copy(location);
@@ -174,14 +247,32 @@ var main = function() {
                           sphere.userData.xi = xi.xi;
                           sphere.userData.element = xi.element;
                           sphere.name = label;
+                          changed = true;
                           //getLandmarksJSON();
                         }
                 }     
         }
-        var requestString = "./getXiCoordinates" + "?xi1=" + location.x + "&xi2=" + location.y + "&xi3=" + location.z;
+        var requestString = "./registerLandmarks" + "?name=" + label + "&xi1=" + location.x + "&xi2=" + location.y + "&xi3=" + location.z;
         xmlhttp.open("GET", requestString, true);
         xmlhttp.send();
       }
+    }
+    
+    var annotationCallback = function(location) {
+      return function(status, label) {
+        if (status == true)
+          registerLandmarks(location, label);
+      }
+    }
+    
+    var createMarker = function(location, labelIn) {
+      var label = labelIn;
+      if (label == null || label == "") {
+        modal.prompt("Please enter the annotation", "Landmark", annotationCallback(location));
+      } else {
+        registerLandmarks(location, label);
+      }
+
       return true;
     }
     
@@ -230,6 +321,7 @@ var main = function() {
             }
             var finalURL = "/generator?" + argumentString;
             currentScene.loadMetadataURL(finalURL, itemDownloadCallback, allCompletedCallback);
+            changed = true;
     }
 
     var setupDatGuiPreprocess = function() {
@@ -298,7 +390,77 @@ var main = function() {
       } 
     }
     
-    var read = function() {
+    var verifierEntered = function(verifier) {
+      if (verifier) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            var options = JSON.parse(xmlhttp.responseText);
+            parseWorkspaceResponse(options);
+          }
+        }
+        var requestString = "./verifyAndResponse" + "?v=" + verifier;
+        xmlhttp.open("GET", requestString, true);
+        xmlhttp.send();
+      }
+    }
+    
+    var verifierEntered = function(verifier) {
+      if (verifier) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            var options = JSON.parse(xmlhttp.responseText);
+            parseWorkspaceResponse(options);
+          }
+        }
+        var requestString = "./verifyAndResponse" + "?v=" + verifier;
+        xmlhttp.open("GET", requestString, true);
+        xmlhttp.send();
+      }
+    }
+    
+    var verifierEnteredCallback = function() {
+      return function(status, verifier) {
+        if (status) {
+          if (verifier && verifier != "") {
+            verifierEntered(verifier);
+          }
+        } else {
+          modal.alert("Loading abort");
+        }
+      }
+    } 
+    
+    var openVerifierPagePressed = function(url) {
+      return function(status, input) {
+        if (status == true) {
+          console.log(url)
+          window.open(url,'_blank');
+          modal.prompt("Enter your verifier here", "...", verifierEnteredCallback());
+        } else {
+          modal.alert("Loading abort");
+        }
+      }
+    }
+
+    var verificationCodePrompt = function(url) {
+      modal.confirm("Workspace may be private, please press confirm to identify yourself.", openVerifierPagePressed(url));
+    } 
+
+    var parseWorkspaceResponse = function(options) {
+      if (options.status === 'error')
+        modal.alert(options.message);
+      else if (options.status === 'success') {
+        if (options.VerifyURL)
+          verificationCodePrompt(options.VerifyURL);
+        else if (options.data)
+          importData(options.data);
+      }
+    }
+    
+    //import static
+    var readStatic = function() {
       var xmlhttp = new XMLHttpRequest();
       xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -308,6 +470,113 @@ var main = function() {
       }
       xmlhttp.open("GET", "/static/testFile.json", true);
       xmlhttp.send();
+    }
+    
+    var readWorkspace = function(url, filename) {
+      if (url && filename) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+          if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+            var options = JSON.parse(xmlhttp.responseText);
+            parseWorkspaceResponse(options);
+          }     
+        }
+        var requestString = "./getWorkspaceResponse" + "?url=" + url + "&filename="+filename;
+        xmlhttp.open("GET", requestString, true);
+        xmlhttp.send();
+      }
+    }
+    
+    var finalReadWorkspacePromptCallback = function() {
+      return function(status, file) {
+        if (status) {
+          currentFilename = file;
+          if (currentFilename && currentFilename !== "") {
+            readWorkspace(currentWorkspaceURL, currentFilename);
+          }
+        }
+      }
+    }
+    
+    
+    var readWorkspacePromptCallback = function() {
+      return function(status, url) {
+        if (status) {
+          currentWorkspaceURL = url;
+          if (currentWorkspaceURL && currentWorkspaceURL !== "") {
+            var file = currentFilename;
+            if (currentFilename == null || currentFilename == "")
+              file = "Please enter file name...";
+            modal.prompt("Please enter file name", file, finalReadWorkspacePromptCallback());
+          }
+        } 
+      }
+    }
+    
+    var readWorkspacePrompt = function() {
+      var url = currentWorkspaceURL;
+      if (currentWorkspaceURL == null || currentWorkspaceURL == "")
+        url = "Enter workspace url...";
+      modal.prompt("Please enter PMR workspace", url, readWorkspacePromptCallback());
+
+    }
+    
+    var commitWorkspaceCallback = function() {
+      return function(status, msg) {
+        if (status == true && msg != "") {
+          var xmlhttp = new XMLHttpRequest();
+          xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+              var response = JSON.parse(xmlhttp.responseText);
+              if (response.status == "success")
+                changesCommitted = true;
+              if (response.message)
+                modal.alert(response.message);
+            }     
+          }
+          var requestString = "./commitWorkspaceChanges" + "?msg=" + msg;
+          xmlhttp.open("GET", requestString, true);
+          xmlhttp.send();
+        }
+      }
+    }
+    
+    var commitWorkspace = function() {
+      if (changed === true) {
+        changed = false;
+        var msg = "Commit Message";
+        modal.prompt("Please enter commit message", msg, commitWorkspaceCallback());
+      }
+      else {
+        modal.alert("Everything is up-to-date");
+      }
+    }
+    
+    var confirmPushCallback = function() {
+      return function(status, input) {
+        if (status == true) {
+          var xmlhttp = new XMLHttpRequest();
+          xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+              var response = JSON.parse(xmlhttp.responseText);
+              if (response.message)
+                modal.alert(response.message);
+            }     
+          }
+          var requestString = "./pushWorkspace";
+          xmlhttp.open("GET", requestString, true);
+          xmlhttp.send();
+        }
+      }
+    }
+    
+    var pushWorkspace = function() {
+      if (changesCommitted) {
+        if (changed)
+          modal.confirm("There are uncommitted changes. Are you sure you want to push the changes?", confirmPushCallback());
+        else
+          modal.confirm("Are you sure you want to push the changes?", confirmPushCallback());
+      }
     }
     
     var write = function() {
@@ -323,12 +592,15 @@ var main = function() {
             var customContainer = document.getElementById("meshGui").append(gui.domElement);
             var viewAllButton = { 'View All':function(){ viewAll() }};
             var resetButton = { 'Reset':function(){ resetView() }};
-            var readButton = { 'Read':function(){ read() }};
+            var readButton = { 'Read':function(){ readWorkspacePrompt() }};
+            var commitButton = {'Commit':function() { commitWorkspace() }};
+            var pushButton = {'Push':function() { pushWorkspace() }};
             var writeButton = { 'Write':function(){ write() }};
             gui.add(viewAllButton, 'View All');
             gui.add(resetButton, 'Reset');
             gui.add(readButton, 'Read');
-            gui.add(writeButton, 'Write');
+            gui.add(commitButton, 'Commit');
+            gui.add(pushButton, 'Push');
             changeMeshTypesControl();
     }
         

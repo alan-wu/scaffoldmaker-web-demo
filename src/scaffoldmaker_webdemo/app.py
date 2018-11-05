@@ -8,6 +8,7 @@ from sanic import Sanic
 from sanic.response import json, html, text
 from scaffoldmaker_webdemo import mesheroutput
 from scaffoldmaker_webdemo import backend
+from scaffoldmaker_webdemo import workspace
 
 db_src = 'sqlite://'
 app = Sanic()
@@ -29,6 +30,7 @@ bundle_css = get_distribution('scaffoldmaker_webdemo').get_metadata(
 store = backend.Store(db_src)
 logger = logging.getLogger(__name__)
 
+testWorkspace = workspace.WorkspaceToLandmark()
 
 def build(typeName, options):
     model = mesheroutput.outputModel(typeName, options)
@@ -111,7 +113,24 @@ async def getXiCoordinates(request):
             coordinates[2] = float(v)
     xiCoordinates = mesheroutput.getXiCoordinates(coordinates)
     return json(xiCoordinates)
-            
+
+@app.route('/registerLandmarks')
+async def registerLandmarks(request):
+    coordinates = [0.0, 0.0, 0.0]
+    name = 'temp'
+    for k, values in request.args.items():
+        v = values[0]
+        if k == 'xi1':
+            coordinates[0] = float(v)
+        elif k == 'xi2':
+            coordinates[1] = float(v)
+        elif k == 'xi3':
+            coordinates[2] = float(v)
+        elif k == 'name':
+            name = v
+    xiCoordinates = mesheroutput.registerLandmarks(name, coordinates)
+    return json(xiCoordinates)
+                
 @app.route('/getMeshTypes')
 async def getMeshTypes(request):
     return json(sorted(mesheroutput.meshes.keys()))
@@ -130,6 +149,50 @@ async def getMeshTypeOptions(request):
         return json({'error': 'no such mesh type'}, status=400)
     return json(options, dumps=dumps)
 
+@app.route('/getWorkspaceResponse')
+async def getWorkspaceResponse(request):
+    url = ""
+    filename = ""
+    for k, values in request.args.items():
+        v = values[0]
+        if k == 'url':
+            url = v
+        elif k == 'filename':
+            filename = v
+    print(url, filename)
+    response = testWorkspace.getResponse(url, filename)
+    return json(response)
+
+@app.route('/verifyAndResponse')
+async def verifyAndResponse(request):
+    verifier = ""
+    for k, values in request.args.items():
+        v = values[0]
+        if k == 'v':
+            verifier = v
+    testWorkspace.setVerifier(v)
+    response = testWorkspace.getResponse()
+    return json(response)
+
+@app.route('/commitWorkspaceChanges')
+async def commitWorkspaceChanges(request):
+    message = ""
+    for k, values in request.args.items():
+        v = values[0]
+        if k == 'msg':
+            message = v
+    settings = mesheroutput.getCurrentSettings()
+    if settings is None:
+        return json({'status':'error', 'message': 'Settings unavailable'}, status=400)
+    buffer = dumps(settings)
+    testWorkspace.writeToWorkspaceFile(buffer)
+    response = testWorkspace.commit(message)
+    return json(response)
+
+@app.route('/pushWorkspace')
+async def pushWorkspace(request):
+    response = testWorkspace.push()
+    return json(response)
 
 @app.route('/scaffoldmaker_webdemo.js')
 async def serve_js(request):

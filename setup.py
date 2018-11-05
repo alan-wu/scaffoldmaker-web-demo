@@ -17,6 +17,11 @@ package_json = {
     "dependencies": {
         "dat.gui": "~0.7.1",
         "zincjs": "~0.29.4",
+        "css-loader": "^1.0.0",
+        "file-loader": "^1.1.11",
+        "html-loader": "^0.5.5",
+        "raw-loader": "^0.5.1",
+        "style-loader": "^0.21.0",
     },
     "devDependencies": {
         "eslint": "~3.15.0",

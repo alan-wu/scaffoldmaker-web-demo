@@ -18,6 +18,7 @@ meshes = {
 currentRegion = None
 currentOptions = None
 currentMeshtypes = None
+currentLandmarks = []
 
 def createCylindeLineGraphics(context, region):
     '''create cylinders which outline the shapes of the heart'''
@@ -110,6 +111,7 @@ def getWorldCoordinates(elementId, xiCoordinates):
     print(outputs)
     return outputs
 
+
 def getXiCoordinates(coordiantes):
     print(coordiantes)
     fieldmodule = currentRegion.getFieldmodule()
@@ -126,7 +128,17 @@ def getXiCoordinates(coordiantes):
     return outputs
     
 
+def registerLandmarks(name, coordinates):
+    outputs = getXiCoordinates(coordinates)
+    landmark = {}
+    landmark['name'] = name
+    landmark['xi'] = outputs["xi"]
+    landmark['element'] = outputs["element"]
+    currentLandmarks.append(landmark)
+    return outputs
+
 def meshGeneration(meshtype_cls, region, options):
+    currentLandmarks = []
     global currentOptions
     fieldmodule = region.getFieldmodule()
     fieldmodule.beginChange()
@@ -181,6 +193,7 @@ def getCurrentSettings():
             orderedOptions.update({option:currentOptions[option]})
         outputArray["options"]  = orderedOptions
         outputArray["meshtype"] = currentMeshtype
+        outputArray["landmarks"] = currentLandmarks
         return outputArray
     return None
     
