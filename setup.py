@@ -47,6 +47,8 @@ setup(
         # 'opencmiss.zinc',
         'scaffoldmaker',
         'sanic',
+        'itsdangerous',
+        'M2Crypto',
     ],
     extras_require={
         'webpack': [

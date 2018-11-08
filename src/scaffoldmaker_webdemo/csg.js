@@ -69,52 +69,39 @@ exports.csg = function(sceneIn, zincRendererIn) {
 
   var xRotationSliderChanged = function() {
     return function(value) {
-      var rad = THREE.Math.degToRad(value);
-      boxGeometry.morph.rotation.x = rad;
-      boxGeometry2.morph.rotation.x = rad;
       updatePlane();
     }
   }
 
   var yRotationSliderChanged = function() {
     return function(value) {
-      var rad = THREE.Math.degToRad(value);
-      boxGeometry.morph.rotation.y = rad;
-      boxGeometry2.morph.rotation.y = rad;
       updatePlane();
     }
   }
 
   var updatePlane = function() {
-    if (1) {
-      var radX = THREE.Math.degToRad(guiControls.xRotation);
-      var radY = THREE.Math.degToRad(guiControls.yRotation);
-      var radZ = THREE.Math.degToRad(guiControls.zRotation);
-      var euler = new THREE.Euler(radX, radY, radZ);
-      boxGeometry.morph.position.set(0, 0, 0);
-      console.log(plane.constant);
-      plane.constant = meshDistance + guiControls.distance;
-      if (guiControls.reverse == false) {
-        plane.normal.set(0, 0, -1);
-        boxGeometry.morph.translateZ(plane.constant);
-      }
-      else {
-        plane.constant = -plane.constant;
-        plane.normal.set(0, 0, 1);
-        boxGeometry.morph.translateZ(-plane.constant);
-      }
-      plane.normal.applyEuler(euler).normalize();
-      boxGeometry.morph.updateMatrix();
-    } else {
-      //boxGeometry2.morph.rotation.z = rad;
-      boxGeometry.morph.updateMatrix();
-      plane.constant = 0;
-      if (guiControls.reverse == false)
-        plane.normal.set(0, 0, -1);
-      else
-        plane.normal.set(0, 0, 1);
-      plane.applyMatrix4(boxGeometry.morph.matrix);
+    var radX = THREE.Math.degToRad(guiControls.xRotation);
+    var radY = THREE.Math.degToRad(guiControls.yRotation);
+    var radZ = THREE.Math.degToRad(guiControls.zRotation);
+    boxGeometry.morph.rotation.x = radX;
+    boxGeometry2.morph.rotation.x = radX;
+    boxGeometry.morph.rotation.y = radY;
+    boxGeometry2.morph.rotation.y = radY;
+    var euler = new THREE.Euler(radX, radY, radZ);
+    boxGeometry.morph.position.set(0, 0, 0);
+    console.log(plane.constant);
+    plane.constant = meshDistance + guiControls.distance;
+    if (guiControls.reverse == false) {
+      plane.normal.set(0, 0, -1);
+      boxGeometry.morph.translateZ(plane.constant);
     }
+    else {
+      plane.constant = -plane.constant;
+      plane.normal.set(0, 0, 1);
+      boxGeometry.morph.translateZ(-plane.constant);
+    }
+    plane.normal.applyEuler(euler).normalize();
+    boxGeometry.morph.updateMatrix();
   }
 
   var createCSG = function() {
@@ -194,6 +181,10 @@ exports.csg = function(sceneIn, zincRendererIn) {
     boxGeometry2 = undefined;
     currentGeometry = undefined;
     createCube(5, 5, 0.001);
+  }
+  
+  this.updatePlane = function() {
+    updatePlane();
   }
   
   var initialise = function() {

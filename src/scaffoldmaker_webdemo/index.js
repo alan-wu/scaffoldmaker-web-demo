@@ -187,19 +187,6 @@ var main = function() {
       xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
           var settings = JSON.parse(xmlhttp.responseText);
-          /*
-          var landmarksJson = {};
-          landmarksJson.options = settings.options;
-          landmarksJson.meshtype = settings.meshtype;
-          landmarksJson.landmarks = [];
-          for (var i = 0; i < landmarks.length; i++) {
-            var landmarkJson = {};
-            landmarkJson.name = landmarks[i].name;
-            landmarkJson.xi = landmarks[i].userData.xi;
-            landmarkJson.element = landmarks[i].userData.element;
-            landmarksJson.landmarks.push(landmarkJson);
-          }
-          */
           var jsonString = JSON.stringify(settings);
           console.log(settings);
           console.log(jsonString);
@@ -299,10 +286,11 @@ var main = function() {
     var importDataDownloadedCompletedCallback = function(dataLandmarks) {
       return function() {
         if (dataLandmarks) {
-            for (var i = 0; i < dataLandmarks.length; i++) {
-              addSphereFromLandmarksData(dataLandmarks[i]);
-            }
+          for (var i = 0; i < dataLandmarks.length; i++) {
+            addSphereFromLandmarksData(dataLandmarks[i]);
+          }
         }
+        csg.updatePlane();
       }
     }
 
@@ -310,6 +298,7 @@ var main = function() {
             var currentScene = zincRenderer.getCurrentScene();
             currentScene.clearAll();
             csg.reset();
+
             for (i = 0; i < landmarks.length; i++) {
               scene.removeObject(landmarks[i]);
             }
@@ -363,7 +352,8 @@ var main = function() {
       meshPartsGui = gui.addFolder('Parameters');
       meshPartsGui.open();
       modifyOptions(options);
-      var confirmButton = { 'Confirm':function(){ confirmRemesh(_addOrganPartCallback()) }};
+      var confirmButton = { 'Confirm':function(){ confirmRemesh(_addOrganPartCallback(), 
+          importDataDownloadedCompletedCallback()) }};
       meshPartsGui.add(confirmButton, 'Confirm');
     }
 
@@ -373,7 +363,8 @@ var main = function() {
         if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
           var options = JSON.parse(xmlhttp.responseText);
           updateGuiOptions(options);
-          confirmRemesh(_addOrganPartCallback());
+          confirmRemesh(_addOrganPartCallback(),
+              importDataDownloadedCompletedCallback());
         }     
       }
       var requestString = "./getMeshTypeOptions" + "?type=" + guiControls['Mesh Types'];
@@ -583,12 +574,33 @@ var main = function() {
       getLandmarksJSON();
     }
     
+    var resumeWorkspace = function() {
+      var xmlhttp = new XMLHttpRequest();
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+          var response = JSON.parse(xmlhttp.responseText);
+          console.log(response)
+          if (response.data) {
+            importData(response.data);
+            modal.alert(response.message);
+          }
+          else if (response.message) {
+            changeMeshTypesControl();
+            modal.alert(response.message);
+          }
+        }
+      }
+      var requestString = "./resume";
+      xmlhttp.open("GET", requestString, true);
+      xmlhttp.send();
+    }
+
+    
 
     var setupDatGui = function(meshTypes) {
             gui = new dat.GUI({autoPlace: false, width: 350});
             gui.domElement.id = 'gui';
             gui.close();
-            createMeshTypesChooser(meshTypes);
             var customContainer = document.getElementById("meshGui").append(gui.domElement);
             var viewAllButton = { 'View All':function(){ viewAll() }};
             var resetButton = { 'Reset':function(){ resetView() }};
@@ -601,7 +613,7 @@ var main = function() {
             gui.add(readButton, 'Read');
             gui.add(commitButton, 'Commit');
             gui.add(pushButton, 'Push');
-            changeMeshTypesControl();
+            resumeWorkspace();
     }
         
     var _pickingCallback = function() {
